@@ -2,9 +2,9 @@
 A user account in the system
 
 Upstream URL(s):
-sharetribeCU - /v1/api/current_user/
-sharetribeOL - /v1/api/own_listings/
-sharetribeTR - /v1/api/transactions
+sharetribeCU - GET /v1/api/current_user/show
+sharetribeOL - GET /v1/api/own_listings/query
+sharetribeTR - GET /v1/api/transactions/query?only=sale
 """
 type UserAccount {
   # basic info
@@ -14,6 +14,7 @@ type UserAccount {
   language: String! # sharetribeCU | data.attributes.profile.protectedData.language
   firstName: String! # sharetribeCU | data.attributes.profile.firstName
   lastName: String! # sharetribeCU | data.attributes.profile.lastName
+  paymentMethods: [PaymentMethod!]!
 
   # app data
   biases: [Talent!]! # sharetribeCU | data.attributes.profile.metadata.biases
@@ -28,23 +29,20 @@ type UserAccount {
   savedListingNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.savedListingNotifs
 
   # marketplace data
-  listings: [!]! # sharetribeOL
+  listings: [Listing!]! # sharetribeOL
   offers: [!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
   banned: Boolean! # sharetribeCU | data.attributes.banned
   deleted: Boolean! # sharetribeCU | data.attributes.deleted
   createdAt: String!  # sharetribeCU | data.attributes.createdAt
   emailVerified: Boolean! # sharetribeCU | data.attributes.emailVerified
   pendingEmail: String  # sharetribeCU | data.attributes.pendingEMail
-  stripeConnected: Boolean! # sharetribeCU | data.attributes.stripeConnected
-  stripePayoutsEnabled: Boolean! # sharetribeCU | data.attributes.stripePayoutsEnabled
-  stripeChargesEnabled: Boolean! # sharetribeCU | data.attributes.stripeChargesEnabled
 }
 
 """
 A user profile in the system
 
 Upstream URL(s):
-sharetribe - /v1/api/users/
+sharetribe - /v1/api/users/show?id={uuid}
 """
 type UserProfile {
   username: String! # sharetribe | data.attributes.profile.displayName
@@ -86,6 +84,84 @@ enum SocialProfileType {
   TWITTER
   INSTAGRAM
   CARRD
+}
+
+"""
+A registered payment method for the user account
+"""
+interface PaymentMethod {
+  type: PaymentMethodType!
+  isDefault: Boolean!
+}
+
+"""
+The supported payment method types
+"""
+enum PaymentMethodType {
+  STRIPE_CARD
+  PAYPAL
+}
+
+"""
+A credit/debit card registered through Stripe
+
+Upstream API(s):
+sharetribeCU - /v1/api/current_user/show
+"""
+type StripePaymentMethod implements PaymentMethod {
+  type: PaymentMethodType!
+  isDefault: Boolean!
+  cardBrand: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.cardBrand
+  lastFour: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.last4Digits
+  expirationMonth: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationMonth
+  expirationYear: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationYear
+}
+
+"""
+Represents a listing in the system
+"""
+type Listing {
+  id: ID!
+  label: String!
+  release: String!
+  description: String!
+  condition: CardCondition!
+  startingPrice: Float!
+  country: String!
+  isFeatured: Boolean!
+  international: Boolean!
+  listedBy: UserAccount!
+  favedBy: [UserAccount!]
+  listings: [Listing!]!
+  groups: [Group!]
+  idols: [Idol!]
+  targetGroups: [Group!]!
+  targetIdols: [Idol!]!
+  type: [ListingType!]!
+}
+
+"""
+Used to classify listings
+"""
+enum ListingType {
+  WTS # Want to Sell
+
+  WTT # Want to trade
+}
+
+"""
+Used to classify photocard conditions
+"""
+enum CardCondition {
+  DAMAGED # Substantial defects (folds, dents, rips, scratches, markings)
+
+  OKAY # Slight defects (worn or old-looking)
+
+  GOOD # Opened with very minor defects
+
+  GREAT # Opened, but in top quality
+
+  NEW # Not opened, in original packaging
 }
 
 """
