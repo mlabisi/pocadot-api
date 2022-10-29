@@ -1,28 +1,116 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+"""
+A user account in the system
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+Upstream URL(s):
+sharetribeCU - /v1/api/current_user/
+sharetribeOL - /v1/api/own_listings/
+sharetribeTR - /v1/api/transactions
+"""
+type UserAccount {
+  # basic info
+  id: ID! # sharetribeCU | data.id
+  email: String! # sharetribeCU | data.attributes.email
+  country: String! # sharetribeCU | data.attributes.profile.protectedData.country
+  language: String! # sharetribeCU | data.attributes.profile.protectedData.language
+  firstName: String! # sharetribeCU | data.attributes.profile.firstName
+  lastName: String! # sharetribeCU | data.attributes.profile.lastName
+
+  # app data
+  biases: [Talent!]! # sharetribeCU | data.attributes.profile.metadata.biases
+  savedListings: [Int!]! # sharetribeCU | data.attributes.profile.metadata.savedListings
+  savedProfiles: [UserProfile!]! # sharetribeCU | data.attributes.profile.metadata.savedProfiles
+  connectedAccounts: [IdentityProvider!]! # sharetribeCU | data.attributes.identityProviders
+  profile: UserProfile!
+
+  # push notification preferences
+  generalNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.generalNotifs
+  savedProfileListingNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.savedProfileListingNotifs
+  savedListingNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.savedListingNotifs
+
+  # marketplace data
+  listings: [!]! # sharetribeOL
+  offers: [!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
+  banned: Boolean! # sharetribeCU | data.attributes.banned
+  deleted: Boolean! # sharetribeCU | data.attributes.deleted
+  createdAt: String!  # sharetribeCU | data.attributes.createdAt
+  emailVerified: Boolean! # sharetribeCU | data.attributes.emailVerified
+  pendingEmail: String  # sharetribeCU | data.attributes.pendingEMail
+  stripeConnected: Boolean! # sharetribeCU | data.attributes.stripeConnected
+  stripePayoutsEnabled: Boolean! # sharetribeCU | data.attributes.stripePayoutsEnabled
+  stripeChargesEnabled: Boolean! # sharetribeCU | data.attributes.stripeChargesEnabled
 }
 
-type User {
+"""
+A user profile in the system
+
+Upstream URL(s):
+sharetribe - /v1/api/users/
+"""
+type UserProfile {
+  username: String! # sharetribe | data.attributes.profile.displayName
+  description: String! # sharetribe | data.attributes.profile.bio
+  socials: [SocialProfile!]! # sharetribe | data.attributes.profile.socials
+  profilePicId: ID! # sharetribe | data.relationships.profileImage.data.id
+}
+
+"""
+An external social media user profile
+"""
+type IdentityProvider {
+  type: IdentityProviderType!
+  userId: ID!
+}
+
+"""
+The supported external oauth identity provider types
+"""
+enum IdentityProviderType {
+  APPLE
+  GOOGLE
+  INSTAGRAM
+  TWITTER
+}
+
+"""
+An external social media user profile
+"""
+type SocialProfile {
+  type: SocialProfileType!
+  username: String!
+}
+
+"""
+The supported external social media profile types
+"""
+enum SocialProfileType {
+  TWITTER
+  INSTAGRAM
+  CARRD
+}
+
+"""
+A musical talent in the database
+"""
+interface Talent {
   id: ID!
   name: String!
 }
 
-type Query {
-  todos: [Todo!]!
+"""
+A group in the database
+"""
+type Group implements Talent {
+  id: ID!
+  name: String!
+  idols: [Idol!]
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
-}
-
-type Mutation {
-  createTodo(input: NewTodo!): Todo!
+"""
+An idol in the database
+"""
+type Idol implements Talent {
+  id: ID!
+  name: String!
+  groups: [Group!]
+  isSolo: Boolean!
 }
