@@ -96,6 +96,7 @@ type ComplexityRoot struct {
 		ListedBy      func(childComplexity int) int
 		Offers        func(childComplexity int) int
 		Release       func(childComplexity int) int
+		SavedBy       func(childComplexity int) int
 		Type          func(childComplexity int) int
 	}
 
@@ -518,6 +519,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Listing.Release(childComplexity), true
+
+	case "Listing.savedBy":
+		if e.complexity.Listing.SavedBy == nil {
+			break
+		}
+
+		return e.complexity.Listing.SavedBy(childComplexity), true
 
 	case "Listing.type":
 		if e.complexity.Listing.Type == nil {
@@ -1468,6 +1476,7 @@ type Listing {
 
     # metadata
     isFeatured: Boolean!
+    savedBy: [UserAccount!]!
 }
 
 """
@@ -3504,6 +3513,98 @@ func (ec *executionContext) fieldContext_Listing_isFeatured(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Listing_savedBy(ctx context.Context, field graphql.CollectedField, obj *model.Listing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Listing_savedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SavedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.UserAccount)
+	fc.Result = res
+	return ec.marshalNUserAccount2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐUserAccountᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Listing_savedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Listing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserAccount_id(ctx, field)
+			case "email":
+				return ec.fieldContext_UserAccount_email(ctx, field)
+			case "country":
+				return ec.fieldContext_UserAccount_country(ctx, field)
+			case "language":
+				return ec.fieldContext_UserAccount_language(ctx, field)
+			case "firstName":
+				return ec.fieldContext_UserAccount_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_UserAccount_lastName(ctx, field)
+			case "paymentMethods":
+				return ec.fieldContext_UserAccount_paymentMethods(ctx, field)
+			case "biases":
+				return ec.fieldContext_UserAccount_biases(ctx, field)
+			case "savedListings":
+				return ec.fieldContext_UserAccount_savedListings(ctx, field)
+			case "savedProfiles":
+				return ec.fieldContext_UserAccount_savedProfiles(ctx, field)
+			case "connectedAccounts":
+				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
+			case "profile":
+				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "generalNotifs":
+				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
+			case "savedProfileListingNotifs":
+				return ec.fieldContext_UserAccount_savedProfileListingNotifs(ctx, field)
+			case "savedListingNotifs":
+				return ec.fieldContext_UserAccount_savedListingNotifs(ctx, field)
+			case "suggestedListings":
+				return ec.fieldContext_UserAccount_suggestedListings(ctx, field)
+			case "createdListings":
+				return ec.fieldContext_UserAccount_createdListings(ctx, field)
+			case "sentOffers":
+				return ec.fieldContext_UserAccount_sentOffers(ctx, field)
+			case "banned":
+				return ec.fieldContext_UserAccount_banned(ctx, field)
+			case "deleted":
+				return ec.fieldContext_UserAccount_deleted(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserAccount_createdAt(ctx, field)
+			case "emailVerified":
+				return ec.fieldContext_UserAccount_emailVerified(ctx, field)
+			case "pendingEmail":
+				return ec.fieldContext_UserAccount_pendingEmail(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ListingFeed_page(ctx context.Context, field graphql.CollectedField, obj *model.ListingFeed) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ListingFeed_page(ctx, field)
 	if err != nil {
@@ -3611,6 +3712,8 @@ func (ec *executionContext) fieldContext_ListingFeed_listings(ctx context.Contex
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -3953,6 +4056,8 @@ func (ec *executionContext) fieldContext_Mutation_addListing(ctx context.Context
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -4034,6 +4139,8 @@ func (ec *executionContext) fieldContext_Mutation_saveListing(ctx context.Contex
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -4115,6 +4222,8 @@ func (ec *executionContext) fieldContext_Mutation_unsaveListing(ctx context.Cont
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -4196,6 +4305,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteListings(ctx context.Con
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -4277,6 +4388,8 @@ func (ec *executionContext) fieldContext_Mutation_skipSuggestedListing(ctx conte
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -5979,6 +6092,8 @@ func (ec *executionContext) fieldContext_Offer_listing(ctx context.Context, fiel
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -6700,6 +6815,8 @@ func (ec *executionContext) fieldContext_Query_listings(ctx context.Context, fie
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -6781,6 +6898,8 @@ func (ec *executionContext) fieldContext_Query_listingsFeed(ctx context.Context,
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -6851,6 +6970,8 @@ func (ec *executionContext) fieldContext_Query_userSuggestions(ctx context.Conte
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -6932,6 +7053,8 @@ func (ec *executionContext) fieldContext_Query_featuredListings(ctx context.Cont
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -8046,6 +8169,8 @@ func (ec *executionContext) fieldContext_Suggestion_listing(ctx context.Context,
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -8612,6 +8737,8 @@ func (ec *executionContext) fieldContext_UserAccount_savedListings(ctx context.C
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -8972,6 +9099,8 @@ func (ec *executionContext) fieldContext_UserAccount_suggestedListings(ctx conte
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -9042,6 +9171,8 @@ func (ec *executionContext) fieldContext_UserAccount_createdListings(ctx context
 				return ec.fieldContext_Listing_offers(ctx, field)
 			case "isFeatured":
 				return ec.fieldContext_Listing_isFeatured(ctx, field)
+			case "savedBy":
+				return ec.fieldContext_Listing_savedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Listing", field.Name)
 		},
@@ -12860,6 +12991,13 @@ func (ec *executionContext) _Listing(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "savedBy":
+
+			out.Values[i] = ec._Listing_savedBy(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15450,6 +15588,50 @@ func (ec *executionContext) marshalNTransaction2ᚖpocadotᚑapiᚋgraphᚋmodel
 
 func (ec *executionContext) marshalNUserAccount2pocadotᚑapiᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {
 	return ec._UserAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserAccount2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐUserAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserAccount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserAccount2ᚖpocadotᚑapiᚋgraphᚋmodelᚐUserAccount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUserAccount2ᚖpocadotᚑapiᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v *model.UserAccount) graphql.Marshaler {

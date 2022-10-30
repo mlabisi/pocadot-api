@@ -122,18 +122,19 @@ type IdolFilters struct {
 
 // Represents a listing in the system
 type Listing struct {
-	ID            string        `json:"id"`
-	Type          []ListingType `json:"type"`
-	AskingPrice   float64       `json:"askingPrice"`
-	Condition     CardCondition `json:"condition"`
-	ListedBy      *UserAccount  `json:"listedBy"`
-	International bool          `json:"international"`
-	Idols         []*Idol       `json:"idols"`
-	Groups        []*Group      `json:"groups"`
-	Release       string        `json:"release"`
-	Description   string        `json:"description"`
-	Offers        []*Offer      `json:"offers"`
-	IsFeatured    bool          `json:"isFeatured"`
+	ID            string         `json:"id"`
+	Type          []ListingType  `json:"type"`
+	AskingPrice   float64        `json:"askingPrice"`
+	Condition     CardCondition  `json:"condition"`
+	ListedBy      *UserAccount   `json:"listedBy"`
+	International bool           `json:"international"`
+	Idols         []*Idol        `json:"idols"`
+	Groups        []*Group       `json:"groups"`
+	Release       string         `json:"release"`
+	Description   string         `json:"description"`
+	Offers        []*Offer       `json:"offers"`
+	IsFeatured    bool           `json:"isFeatured"`
+	SavedBy       []*UserAccount `json:"savedBy"`
 }
 
 type ListingFeed struct {

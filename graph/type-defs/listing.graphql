@@ -17,6 +17,7 @@ type Listing {
 
     # metadata
     isFeatured: Boolean!
+    savedBy: [UserAccount!]!
 }
 
 """
