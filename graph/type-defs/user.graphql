@@ -52,6 +52,11 @@ type UserProfile {
   profilePicId: ID! # sharetribe | data.relationships.profileImage.data.id
 }
 
+type ProfileFeed {
+  page: Int!
+  users: [UserProfile!]!
+}
+
 """
 An external social media user profile
 """

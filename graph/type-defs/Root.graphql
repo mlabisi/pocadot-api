@@ -1,18 +1,34 @@
 type Query {
-    listing: Listing!
-    listings: [Listing!]!
+    account(input: ID!): UserAccount!
+    profile(input: ID!): UserProfile!
+
+    myAccount: UserAccount!
+    myProfile: UserProfile!
+
+    listings(input: ListingFilters!): [Listing!]!
+    listingsFeed: [Listing!]!
+    userSuggestions(input: ID!): [Listing!]!
     featuredListings: [Listing!]!
 
-    account: UserAccount!
-    myAccount: UserAccount!
+    users(input: UserFilters!): [UserProfile!]!
+    usersFeed(page: Int!): ProfileFeed!
+
+    idols(input: IdolFilters!): [Idol!]!
+    idolsFeed(page: Int!): IdolFeed!
+
+    groups(input: GroupFilters!): [Group!]!
+    groupsFeed(page: Int!): GroupFeed!
+
+    talent(input: TalentFilters!): [Talent!]!
+    talentFeed: [Talent!]!
 }
 
 type Mutation {
-    addListing: Listing!
-    removeListing: Listing!
-    saveListing: Listing!
-    unsaveListing: Listing!
-    skipSuggestedListing: Listing!
+    addListing(input: AddListingInput!): Listing!
+    saveListing(input: ID!): Listing!
+    unsaveListing(input: ID!): Listing!
+    deleteListings(input: [ID!]!): [Listing!]!
+    skipSuggestedListing(input: ID!): Listing!
 
     createProfile: UserProfile!
     saveProfile: UserProfile!
@@ -26,6 +42,7 @@ type Mutation {
     acceptOffer: Offer!
     negotiateOffer: Offer!
     rejectOffer: Offer!
+    sendMessage(input: SendMessageInput!): Message!
 
     makePayment: Transaction!
     disputeCharge: Transaction!
@@ -40,6 +57,4 @@ type Mutation {
     logout: UserAccount!
     createAccount: UserAccount!
     deleteAccount: UserAccount!
-
-    sendMessage: Message!
 }

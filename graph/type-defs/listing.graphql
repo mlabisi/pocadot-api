@@ -85,6 +85,11 @@ input UpdateListingInput {
     targetMinStaringPrice: Float
 }
 
+type ListingFeed {
+    page: Int!
+    listings: [Listing!]!
+}
+
 """
 Available filters for the Listing type
 """

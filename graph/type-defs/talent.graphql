@@ -7,6 +7,20 @@ interface Talent {
 }
 
 """
+Available filters for the Group type
+"""
+input TalentFilters {
+    ids: [ID!]
+    groupFields: GroupFilterFields
+    idolFields: IdolFilterFields
+}
+
+type GroupFeed {
+    page: Int!
+    groups: [Group!]!
+}
+
+"""
 A group in the database
 """
 type Group implements Talent {
@@ -39,6 +53,11 @@ input GroupFilterFields {
     idols: [ID!]
     inListings: [ID!]
     wantedByListings: [ID!]
+}
+
+type IdolFeed {
+    page: Int!
+    idols: [Idol!]!
 }
 
 """
