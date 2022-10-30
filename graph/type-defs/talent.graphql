@@ -24,3 +24,36 @@ type Idol implements Talent {
     groups: [Group!]!
     isSolo: Boolean!
 }
+
+"""
+Available filters for the Group type
+"""
+input GroupFilters {
+    ids: [ID!]
+    fields: GroupFilterFields
+}
+
+input GroupFilterFields {
+    name: [String!]
+    favedBy: [ID!]
+    idols: [ID!]
+    inListings: [ID!]
+    wantedByListings: [ID!]
+}
+
+"""
+Available filters for the Idol type
+"""
+input IdolFilters {
+    ids: [ID!]
+    fields: IdolFilterFields
+}
+
+input IdolFilterFields {
+    stageName: [String!]
+    groups: [ID!]
+    inListings: [ID!]
+    wantedByListings: [ID!]
+    inCollections: [ID!]
+    isSolo: Boolean
+}

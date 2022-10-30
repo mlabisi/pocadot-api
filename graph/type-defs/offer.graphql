@@ -6,6 +6,7 @@ type Offer {
     listing: Listing!
     madeBy: UserAccount!
     status: OfferStatus!
+    conversation: [Message!]!
     transaction: Transaction
 }
 
