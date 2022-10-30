@@ -1,0 +1,9 @@
+"""
+A message sent from one user to another
+"""
+type Message {
+    timestamp: Int!
+    author: UserAccount!
+    recipient: UserAccount!
+    body: String!
+}

@@ -29,6 +29,7 @@ type UserAccount {
   savedListingNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.savedListingNotifs
 
   # marketplace data
+  suggestedListings: [Listing!]!
   createdListings: [Listing!]! # sharetribeOL
   sentOffers: [Offer!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
   banned: Boolean! # sharetribeCU | data.attributes.banned

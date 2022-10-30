@@ -1,0 +1,45 @@
+type Query {
+    listing: Listing!
+    listings: [Listing!]!
+    featuredListings: [Listing!]!
+
+    account: UserAccount!
+    myAccount: UserAccount!
+}
+
+type Mutation {
+    addListing: Listing!
+    removeListing: Listing!
+    saveListing: Listing!
+    unsaveListing: Listing!
+    skipSuggestedListing: Listing!
+
+    createProfile: UserProfile!
+    saveProfile: UserProfile!
+    unsaveProfile: UserProfile!
+    blockProfile: UserProfile!
+    reportProfile: UserProfile!
+
+    makeOffer: Offer!
+    editOffer: Offer!
+    rescindOffer: Offer!
+    acceptOffer: Offer!
+    negotiateOffer: Offer!
+    rejectOffer: Offer!
+
+    makePayment: Transaction!
+    disputeCharge: Transaction!
+
+    changePassword: UserAccount!
+    forgetPassword: UserAccount!
+    resetPassword: UserAccount!
+    updateAccount: UserAccount!
+    updateProfile: UserProfile!
+
+    login: UserAccount!
+    logout: UserAccount!
+    createAccount: UserAccount!
+    deleteAccount: UserAccount!
+
+    sendMessage: Message!
+}

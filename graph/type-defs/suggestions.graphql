@@ -1,0 +1,8 @@
+"""
+A listing recommendation
+"""
+type Suggestion {
+    skipped: Boolean!
+    saved: Boolean!
+    listing: Listing!
+}
