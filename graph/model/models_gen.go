@@ -2,19 +2,619 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+// A registered payment method for the user account
+type PaymentMethod interface {
+	IsPaymentMethod()
+	GetType() PaymentMethodType
+	GetIsDefault() bool
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+// A musical talent in the database
+type Talent interface {
+	IsTalent()
+	GetID() string
+	GetName() string
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+// When adding a listing, all required fields must be specified
+type AddListingInput struct {
+	Release               *string        `json:"release"`
+	Description           *string        `json:"description"`
+	Condition             CardCondition  `json:"condition"`
+	StartingPrice         *float64       `json:"startingPrice"`
+	Country               string         `json:"country"`
+	International         bool           `json:"international"`
+	ListedBy              string         `json:"listedBy"`
+	Idols                 []string       `json:"idols"`
+	Groups                []string       `json:"groups"`
+	TargetIdols           []string       `json:"targetIdols"`
+	TargetMinCondition    *CardCondition `json:"targetMinCondition"`
+	TargetGroups          []string       `json:"targetGroups"`
+	Type                  []ListingType  `json:"type"`
+	TargetMinStaringPrice *float64       `json:"targetMinStaringPrice"`
+}
+
+// When adding a user, no optional fields can be added
+type AddUserInput struct {
+	Username string `json:"username"`
+	Country  string `json:"country"`
+}
+
+// Represents a monetary amount in the smallest unit (aka cents for USD)
+type Amount struct {
+	Currency string `json:"currency"`
+	Amount   int    `json:"amount"`
+}
+
+// A group in the database
+type Group struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Idols []*Idol `json:"idols"`
+}
+
+func (Group) IsTalent()            {}
+func (this Group) GetID() string   { return this.ID }
+func (this Group) GetName() string { return this.Name }
+
+type GroupFeed struct {
+	Page   int      `json:"page"`
+	Groups []*Group `json:"groups"`
+}
+
+type GroupFilterFields struct {
+	Name             []string `json:"name"`
+	FavedBy          []string `json:"favedBy"`
+	Idols            []string `json:"idols"`
+	InListings       []string `json:"inListings"`
+	WantedByListings []string `json:"wantedByListings"`
+}
+
+// Available filters for the Group type
+type GroupFilters struct {
+	Ids    []string           `json:"ids"`
+	Fields *GroupFilterFields `json:"fields"`
+}
+
+// An external social media user profile
+type IdentityProvider struct {
+	Type   IdentityProviderType `json:"type"`
+	UserID string               `json:"userId"`
+}
+
+// An idol in the database
+type Idol struct {
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Groups []*Group `json:"groups"`
+	IsSolo bool     `json:"isSolo"`
+}
+
+func (Idol) IsTalent()            {}
+func (this Idol) GetID() string   { return this.ID }
+func (this Idol) GetName() string { return this.Name }
+
+type IdolFeed struct {
+	Page  int     `json:"page"`
+	Idols []*Idol `json:"idols"`
+}
+
+type IdolFilterFields struct {
+	StageName        []string `json:"stageName"`
+	Groups           []string `json:"groups"`
+	InListings       []string `json:"inListings"`
+	WantedByListings []string `json:"wantedByListings"`
+	InCollections    []string `json:"inCollections"`
+	IsSolo           *bool    `json:"isSolo"`
+}
+
+// Available filters for the Idol type
+type IdolFilters struct {
+	Ids    []string          `json:"ids"`
+	Fields *IdolFilterFields `json:"fields"`
+}
+
+// Represents a listing in the system
+type Listing struct {
+	ID            string        `json:"id"`
+	Type          []ListingType `json:"type"`
+	AskingPrice   float64       `json:"askingPrice"`
+	Condition     CardCondition `json:"condition"`
+	ListedBy      *UserAccount  `json:"listedBy"`
+	International bool          `json:"international"`
+	Idols         []*Idol       `json:"idols"`
+	Groups        []*Group      `json:"groups"`
+	Release       string        `json:"release"`
+	Description   string        `json:"description"`
+	Offers        []*Offer      `json:"offers"`
+	IsFeatured    bool          `json:"isFeatured"`
+}
+
+type ListingFeed struct {
+	Page     int        `json:"page"`
+	Listings []*Listing `json:"listings"`
+}
+
+type ListingFieldFilters struct {
+	Release            []string       `json:"release"`
+	Description        []string       `json:"description"`
+	Condition          *CardCondition `json:"condition"`
+	StartingPrice      *float64       `json:"startingPrice"`
+	Country            []string       `json:"country"`
+	International      *bool          `json:"international"`
+	ListedBy           []string       `json:"listedBy"`
+	FavedBy            []string       `json:"favedBy"`
+	Idols              []string       `json:"idols"`
+	Groups             []string       `json:"groups"`
+	TargetIdols        []string       `json:"targetIdols"`
+	TargetMinCondition *CardCondition `json:"targetMinCondition"`
+	TargetGroups       []string       `json:"targetGroups"`
+	Type               *ListingType   `json:"type"`
+}
+
+// Available filters for the Listing type
+type ListingFilters struct {
+	Ids    []string             `json:"ids"`
+	Fields *ListingFieldFilters `json:"fields"`
+}
+
+// A message sent from one user to another
+type Message struct {
+	Timestamp int          `json:"timestamp"`
+	Author    *UserAccount `json:"author"`
+	Recipient *UserAccount `json:"recipient"`
+	Body      string       `json:"body"`
+}
+
+// Represents an offer made on a listing in the system
+type Offer struct {
+	ID           string       `json:"id"`
+	Listing      *Listing     `json:"listing"`
+	MadeBy       *UserAccount `json:"madeBy"`
+	Status       OfferStatus  `json:"status"`
+	Conversation []*Message   `json:"conversation"`
+	Transaction  *Transaction `json:"transaction"`
+}
+
+type ProfileFeed struct {
+	Page  int            `json:"page"`
+	Users []*UserProfile `json:"users"`
+}
+
+type SendMessageInput struct {
+	ConversationID string `json:"conversationId"`
+	AuthorID       string `json:"authorId"`
+	Message        string `json:"message"`
+}
+
+// An external social media user profile
+type SocialProfile struct {
+	Type     SocialProfileType `json:"type"`
+	Username string            `json:"username"`
+}
+
+type StartChatInput struct {
+	FromID    string `json:"fromId"`
+	ToID      string `json:"toId"`
+	ListingID string `json:"listingId"`
+}
+
+// A credit/debit card registered through Stripe
+//
+// Upstream API(s):
+// sharetribeCU - /v1/api/current_user/show
+type StripePaymentMethod struct {
+	Type            PaymentMethodType `json:"type"`
+	IsDefault       bool              `json:"isDefault"`
+	CardBrand       string            `json:"cardBrand"`
+	LastFour        string            `json:"lastFour"`
+	ExpirationMonth string            `json:"expirationMonth"`
+	ExpirationYear  string            `json:"expirationYear"`
+}
+
+func (StripePaymentMethod) IsPaymentMethod()                {}
+func (this StripePaymentMethod) GetType() PaymentMethodType { return this.Type }
+func (this StripePaymentMethod) GetIsDefault() bool         { return this.IsDefault }
+
+// A listing recommendation
+type Suggestion struct {
+	Skipped bool     `json:"skipped"`
+	Saved   bool     `json:"saved"`
+	Listing *Listing `json:"listing"`
+}
+
+// Available filters for the Group type
+type TalentFilters struct {
+	Ids         []string           `json:"ids"`
+	GroupFields *GroupFilterFields `json:"groupFields"`
+	IdolFields  *IdolFilterFields  `json:"idolFields"`
+}
+
+// Represents an monetary transaction made for an accepted offer
+type Transaction struct {
+	ID            string  `json:"id"`
+	AmountCharged *Amount `json:"amountCharged"`
+	AmountEarned  *Amount `json:"amountEarned"`
+}
+
+type UniqueChatInput struct {
+	ID string `json:"id"`
+}
+
+// When updating a listing, only non-final fields can be updated
+type UpdateListingInput struct {
+	ID                    string         `json:"id"`
+	Release               *string        `json:"release"`
+	Description           *string        `json:"description"`
+	Condition             *CardCondition `json:"condition"`
+	StartingPrice         *float64       `json:"startingPrice"`
+	Country               *string        `json:"country"`
+	International         *bool          `json:"international"`
+	ListedBy              *string        `json:"listedBy"`
+	FavedBy               []string       `json:"favedBy"`
+	Idols                 []string       `json:"idols"`
+	Groups                []string       `json:"groups"`
+	TargetIdols           []string       `json:"targetIdols"`
+	TargetMinCondition    *CardCondition `json:"targetMinCondition"`
+	TargetGroups          []string       `json:"targetGroups"`
+	Type                  []ListingType  `json:"type"`
+	TargetMinStaringPrice *float64       `json:"targetMinStaringPrice"`
+}
+
+// When updating a user, other existing fields can be added
+type UpdateUserInput struct {
+	ID           string   `json:"id"`
+	Username     *string  `json:"username"`
+	Country      *string  `json:"country"`
+	Listings     []string `json:"listings"`
+	Collections  []string `json:"collections"`
+	FaveGroups   []string `json:"faveGroups"`
+	FaveIdols    []string `json:"faveIdols"`
+	FaveListings []string `json:"faveListings"`
+	FaveUsers    []string `json:"faveUsers"`
+}
+
+// A user account in the system
+//
+// Upstream URL(s):
+// sharetribeCU - GET /v1/api/current_user/show
+// sharetribeOL - GET /v1/api/own_listings/query
+// sharetribeTR - GET /v1/api/transactions/query?only=sale
+type UserAccount struct {
+	ID                        string              `json:"id"`
+	Email                     string              `json:"email"`
+	Country                   string              `json:"country"`
+	Language                  string              `json:"language"`
+	FirstName                 string              `json:"firstName"`
+	LastName                  string              `json:"lastName"`
+	PaymentMethods            []PaymentMethod     `json:"paymentMethods"`
+	Biases                    []Talent            `json:"biases"`
+	SavedListings             []*Listing          `json:"savedListings"`
+	SavedProfiles             []*UserProfile      `json:"savedProfiles"`
+	ConnectedAccounts         []*IdentityProvider `json:"connectedAccounts"`
+	Profile                   *UserProfile        `json:"profile"`
+	GeneralNotifs             bool                `json:"generalNotifs"`
+	SavedProfileListingNotifs bool                `json:"savedProfileListingNotifs"`
+	SavedListingNotifs        bool                `json:"savedListingNotifs"`
+	SuggestedListings         []*Listing          `json:"suggestedListings"`
+	CreatedListings           []*Listing          `json:"createdListings"`
+	SentOffers                []*Offer            `json:"sentOffers"`
+	Banned                    bool                `json:"banned"`
+	Deleted                   bool                `json:"deleted"`
+	CreatedAt                 string              `json:"createdAt"`
+	EmailVerified             bool                `json:"emailVerified"`
+	PendingEmail              *string             `json:"pendingEmail"`
+}
+
+type UserFilterFields struct {
+	Username     *string  `json:"username"`
+	Country      *string  `json:"country"`
+	Description  *string  `json:"description"`
+	Listings     []string `json:"listings"`
+	FaveGroups   []string `json:"faveGroups"`
+	FaveIdols    []string `json:"faveIdols"`
+	FaveListings []string `json:"faveListings"`
+	FaveUsers    []string `json:"faveUsers"`
+	Collections  []string `json:"collections"`
+}
+
+// Available filters for the User type
+type UserFilters struct {
+	Ids    []string          `json:"ids"`
+	Fields *UserFilterFields `json:"fields"`
+}
+
+type UserPreferencesInput struct {
+	ID         string   `json:"id"`
+	FaveGroups []string `json:"faveGroups"`
+	FaveIdols  []string `json:"faveIdols"`
+}
+
+// A user profile in the system
+//
+// Upstream URL(s):
+// sharetribe - /v1/api/users/show?id={uuid}
+type UserProfile struct {
+	Username     string           `json:"username"`
+	Description  string           `json:"description"`
+	Socials      []*SocialProfile `json:"socials"`
+	ProfilePicID string           `json:"profilePicId"`
+}
+
+// Used to classify photocard conditions
+type CardCondition string
+
+const (
+	CardConditionDamaged CardCondition = "DAMAGED"
+	CardConditionOkay    CardCondition = "OKAY"
+	CardConditionGood    CardCondition = "GOOD"
+	CardConditionGreat   CardCondition = "GREAT"
+	CardConditionNew     CardCondition = "NEW"
+)
+
+var AllCardCondition = []CardCondition{
+	CardConditionDamaged,
+	CardConditionOkay,
+	CardConditionGood,
+	CardConditionGreat,
+	CardConditionNew,
+}
+
+func (e CardCondition) IsValid() bool {
+	switch e {
+	case CardConditionDamaged, CardConditionOkay, CardConditionGood, CardConditionGreat, CardConditionNew:
+		return true
+	}
+	return false
+}
+
+func (e CardCondition) String() string {
+	return string(e)
+}
+
+func (e *CardCondition) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CardCondition(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CardCondition", str)
+	}
+	return nil
+}
+
+func (e CardCondition) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The supported external oauth identity provider types
+type IdentityProviderType string
+
+const (
+	IdentityProviderTypeApple     IdentityProviderType = "APPLE"
+	IdentityProviderTypeGoogle    IdentityProviderType = "GOOGLE"
+	IdentityProviderTypeInstagram IdentityProviderType = "INSTAGRAM"
+	IdentityProviderTypeTwitter   IdentityProviderType = "TWITTER"
+)
+
+var AllIdentityProviderType = []IdentityProviderType{
+	IdentityProviderTypeApple,
+	IdentityProviderTypeGoogle,
+	IdentityProviderTypeInstagram,
+	IdentityProviderTypeTwitter,
+}
+
+func (e IdentityProviderType) IsValid() bool {
+	switch e {
+	case IdentityProviderTypeApple, IdentityProviderTypeGoogle, IdentityProviderTypeInstagram, IdentityProviderTypeTwitter:
+		return true
+	}
+	return false
+}
+
+func (e IdentityProviderType) String() string {
+	return string(e)
+}
+
+func (e *IdentityProviderType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = IdentityProviderType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid IdentityProviderType", str)
+	}
+	return nil
+}
+
+func (e IdentityProviderType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// Used to classify listings
+type ListingType string
+
+const (
+	ListingTypeWts ListingType = "WTS"
+	ListingTypeWtt ListingType = "WTT"
+)
+
+var AllListingType = []ListingType{
+	ListingTypeWts,
+	ListingTypeWtt,
+}
+
+func (e ListingType) IsValid() bool {
+	switch e {
+	case ListingTypeWts, ListingTypeWtt:
+		return true
+	}
+	return false
+}
+
+func (e ListingType) String() string {
+	return string(e)
+}
+
+func (e *ListingType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListingType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListingType", str)
+	}
+	return nil
+}
+
+func (e ListingType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The supported statuses an offer can be in
+type OfferStatus string
+
+const (
+	OfferStatusAccepted   OfferStatus = "ACCEPTED"
+	OfferStatusNegotiated OfferStatus = "NEGOTIATED"
+	OfferStatusRescinded  OfferStatus = "RESCINDED"
+	OfferStatusRejected   OfferStatus = "REJECTED"
+	OfferStatusEdited     OfferStatus = "EDITED"
+	OfferStatusOpen       OfferStatus = "OPEN"
+)
+
+var AllOfferStatus = []OfferStatus{
+	OfferStatusAccepted,
+	OfferStatusNegotiated,
+	OfferStatusRescinded,
+	OfferStatusRejected,
+	OfferStatusEdited,
+	OfferStatusOpen,
+}
+
+func (e OfferStatus) IsValid() bool {
+	switch e {
+	case OfferStatusAccepted, OfferStatusNegotiated, OfferStatusRescinded, OfferStatusRejected, OfferStatusEdited, OfferStatusOpen:
+		return true
+	}
+	return false
+}
+
+func (e OfferStatus) String() string {
+	return string(e)
+}
+
+func (e *OfferStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OfferStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OfferStatus", str)
+	}
+	return nil
+}
+
+func (e OfferStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The supported payment method types
+type PaymentMethodType string
+
+const (
+	PaymentMethodTypeStripeCard PaymentMethodType = "STRIPE_CARD"
+	PaymentMethodTypePaypal     PaymentMethodType = "PAYPAL"
+)
+
+var AllPaymentMethodType = []PaymentMethodType{
+	PaymentMethodTypeStripeCard,
+	PaymentMethodTypePaypal,
+}
+
+func (e PaymentMethodType) IsValid() bool {
+	switch e {
+	case PaymentMethodTypeStripeCard, PaymentMethodTypePaypal:
+		return true
+	}
+	return false
+}
+
+func (e PaymentMethodType) String() string {
+	return string(e)
+}
+
+func (e *PaymentMethodType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PaymentMethodType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PaymentMethodType", str)
+	}
+	return nil
+}
+
+func (e PaymentMethodType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The supported external social media profile types
+type SocialProfileType string
+
+const (
+	SocialProfileTypeTwitter   SocialProfileType = "TWITTER"
+	SocialProfileTypeInstagram SocialProfileType = "INSTAGRAM"
+	SocialProfileTypeCarrd     SocialProfileType = "CARRD"
+)
+
+var AllSocialProfileType = []SocialProfileType{
+	SocialProfileTypeTwitter,
+	SocialProfileTypeInstagram,
+	SocialProfileTypeCarrd,
+}
+
+func (e SocialProfileType) IsValid() bool {
+	switch e {
+	case SocialProfileTypeTwitter, SocialProfileTypeInstagram, SocialProfileTypeCarrd:
+		return true
+	}
+	return false
+}
+
+func (e SocialProfileType) String() string {
+	return string(e)
+}
+
+func (e *SocialProfileType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SocialProfileType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SocialProfileType", str)
+	}
+	return nil
+}
+
+func (e SocialProfileType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
