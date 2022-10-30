@@ -24,37 +24,35 @@ type Query {
 }
 
 type Mutation {
-    addListing(input: AddListingInput!): Listing!
-    saveListing(input: ID!): Listing!
-    unsaveListing(input: ID!): Listing!
-    deleteListings(input: [ID!]!): [Listing!]!
-    skipSuggestedListing(input: ID!): Listing!
-
-    createProfile: UserProfile!
-    saveProfile: UserProfile!
-    unsaveProfile: UserProfile!
-    blockProfile: UserProfile!
-    reportProfile: UserProfile!
-
-    makeOffer: Offer!
-    editOffer: Offer!
-    rescindOffer: Offer!
-    acceptOffer: Offer!
-    negotiateOffer: Offer!
-    rejectOffer: Offer!
-    sendMessage(input: SendMessageInput!): Message!
-
-    makePayment: Transaction!
-    disputeCharge: Transaction!
+    login: UserAccount!
+    logout: UserAccount!
+    createAccount: UserAccount!
+    deleteAccount(input: ID!): UserAccount!
+    updateAccount: UserAccount!
 
     changePassword: UserAccount!
     forgetPassword: UserAccount!
     resetPassword: UserAccount!
-    updateAccount: UserAccount!
-    updateProfile: UserProfile!
 
-    login: UserAccount!
-    logout: UserAccount!
-    createAccount: UserAccount!
-    deleteAccount: UserAccount!
+    addListing(input: AddListingInput!): Listing!
+    faveListing(input: ID!): Listing!
+    unfaveListing(input: ID!): Listing!
+    deleteListings(input: [ID!]!): [Listing!]!
+    skipSuggestedListing(input: ID!): Listing!
+
+    faveProfile(input: ID!): UserProfile!
+    unfaveProfile(input: ID!): UserProfile!
+    blockProfile(input: ID!): UserProfile!
+    reportProfile(input: ID!): UserProfile!
+
+    makeOffer: Offer!
+    updateOffer: Offer!
+    rescindOffer(input: ID!): Offer!
+    acceptOffer(input: ID!): Offer!
+    negotiateOffer: Offer!
+    rejectOffer(input: ID!): Offer!
+    sendMessage(input: SendMessageInput!): Message!
+
+    makePayment: Transaction!
+    disputeCharge: Transaction!
 }
