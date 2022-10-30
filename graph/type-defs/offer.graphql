@@ -1,6 +1,39 @@
 """
-Represents an  offer made on a listing in the system
+Represents an offer made on a listing in the system
 """
 type Offer {
     id: ID!
+    listing: Listing!
+    madeBy: UserAccount!
+    status: OfferStatus!
+    transaction: Transaction
+}
+
+"""
+The supported statuses an offer can be in
+"""
+enum OfferStatus {
+    ACCEPTED
+    NEGOTIATED
+    RESCINDED
+    REJECTED
+    EDITED
+    OPEN
+}
+
+"""
+Represents an monetary transaction made for an accepted offer
+"""
+type Transaction {
+    id: ID!
+    amountCharged: Amount!
+    amountEarned: Amount!
+}
+
+"""
+Represents a monetary amount in the smallest unit (aka cents for USD)
+"""
+type Amount {
+    currency: String!
+    amount: Int!
 }

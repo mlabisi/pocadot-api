@@ -2,23 +2,21 @@
 Represents a listing in the system
 """
 type Listing {
+    #basic info
     id: ID!
-    label: String!
+    type: [ListingType!]!
+    askingPrice: Float!
+    condition: CardCondition!
+    listedBy: UserAccount!
+    international: Boolean!
+    idols: [Idol!]!
+    groups: [Group!]
     release: String!
     description: String!
-    condition: CardCondition!
-    startingPrice: Float!
-    country: String!
+    offers: [Offer!]!
+
+    # metadata
     isFeatured: Boolean!
-    international: Boolean!
-    listedBy: UserAccount!
-    favedBy: [UserAccount!]
-    listings: [Listing!]!
-    groups: [Group!]
-    idols: [Idol!]
-    targetGroups: [Group!]!
-    targetIdols: [Idol!]!
-    type: [ListingType!]!
 }
 
 """
