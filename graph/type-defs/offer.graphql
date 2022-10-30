@@ -1,0 +1,6 @@
+"""
+Represents an  offer made on a listing in the system
+"""
+type Offer {
+    id: ID!
+}

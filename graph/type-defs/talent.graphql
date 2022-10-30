@@ -1,0 +1,26 @@
+"""
+A musical talent in the database
+"""
+interface Talent {
+    id: ID!
+    name: String!
+}
+
+"""
+A group in the database
+"""
+type Group implements Talent {
+    id: ID!
+    name: String!
+    idols: [Idol!]
+}
+
+"""
+An idol in the database
+"""
+type Idol implements Talent {
+    id: ID!
+    name: String!
+    groups: [Group!]
+    isSolo: Boolean!
+}

@@ -1,0 +1,46 @@
+"""
+Represents a listing in the system
+"""
+type Listing {
+    id: ID!
+    label: String!
+    release: String!
+    description: String!
+    condition: CardCondition!
+    startingPrice: Float!
+    country: String!
+    isFeatured: Boolean!
+    international: Boolean!
+    listedBy: UserAccount!
+    favedBy: [UserAccount!]
+    listings: [Listing!]!
+    groups: [Group!]
+    idols: [Idol!]
+    targetGroups: [Group!]!
+    targetIdols: [Idol!]!
+    type: [ListingType!]!
+}
+
+"""
+Used to classify listings
+"""
+enum ListingType {
+    WTS # Want to Sell
+
+    WTT # Want to trade
+}
+
+"""
+Used to classify photocard conditions
+"""
+enum CardCondition {
+    DAMAGED # Substantial defects (folds, dents, rips, scratches, markings)
+
+    OKAY # Slight defects (worn or old-looking)
+
+    GOOD # Opened with very minor defects
+
+    GREAT # Opened, but in top quality
+
+    NEW # Not opened, in original packaging
+}

@@ -1,0 +1,30 @@
+"""
+A registered payment method for the user account
+"""
+interface PaymentMethod {
+    type: PaymentMethodType!
+    isDefault: Boolean!
+}
+
+"""
+The supported payment method types
+"""
+enum PaymentMethodType {
+    STRIPE_CARD
+    PAYPAL
+}
+
+"""
+A credit/debit card registered through Stripe
+
+Upstream API(s):
+sharetribeCU - /v1/api/current_user/show
+"""
+type StripePaymentMethod implements PaymentMethod {
+    type: PaymentMethodType!
+    isDefault: Boolean!
+    cardBrand: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.cardBrand
+    lastFour: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.last4Digits
+    expirationMonth: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationMonth
+    expirationYear: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationYear
+}

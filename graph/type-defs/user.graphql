@@ -30,7 +30,7 @@ type UserAccount {
 
   # marketplace data
   listings: [Listing!]! # sharetribeOL
-  offers: [!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
+  offers: [Offer!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
   banned: Boolean! # sharetribeCU | data.attributes.banned
   deleted: Boolean! # sharetribeCU | data.attributes.deleted
   createdAt: String!  # sharetribeCU | data.attributes.createdAt
@@ -84,109 +84,4 @@ enum SocialProfileType {
   TWITTER
   INSTAGRAM
   CARRD
-}
-
-"""
-A registered payment method for the user account
-"""
-interface PaymentMethod {
-  type: PaymentMethodType!
-  isDefault: Boolean!
-}
-
-"""
-The supported payment method types
-"""
-enum PaymentMethodType {
-  STRIPE_CARD
-  PAYPAL
-}
-
-"""
-A credit/debit card registered through Stripe
-
-Upstream API(s):
-sharetribeCU - /v1/api/current_user/show
-"""
-type StripePaymentMethod implements PaymentMethod {
-  type: PaymentMethodType!
-  isDefault: Boolean!
-  cardBrand: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.cardBrand
-  lastFour: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.last4Digits
-  expirationMonth: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationMonth
-  expirationYear: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationYear
-}
-
-"""
-Represents a listing in the system
-"""
-type Listing {
-  id: ID!
-  label: String!
-  release: String!
-  description: String!
-  condition: CardCondition!
-  startingPrice: Float!
-  country: String!
-  isFeatured: Boolean!
-  international: Boolean!
-  listedBy: UserAccount!
-  favedBy: [UserAccount!]
-  listings: [Listing!]!
-  groups: [Group!]
-  idols: [Idol!]
-  targetGroups: [Group!]!
-  targetIdols: [Idol!]!
-  type: [ListingType!]!
-}
-
-"""
-Used to classify listings
-"""
-enum ListingType {
-  WTS # Want to Sell
-
-  WTT # Want to trade
-}
-
-"""
-Used to classify photocard conditions
-"""
-enum CardCondition {
-  DAMAGED # Substantial defects (folds, dents, rips, scratches, markings)
-
-  OKAY # Slight defects (worn or old-looking)
-
-  GOOD # Opened with very minor defects
-
-  GREAT # Opened, but in top quality
-
-  NEW # Not opened, in original packaging
-}
-
-"""
-A musical talent in the database
-"""
-interface Talent {
-  id: ID!
-  name: String!
-}
-
-"""
-A group in the database
-"""
-type Group implements Talent {
-  id: ID!
-  name: String!
-  idols: [Idol!]
-}
-
-"""
-An idol in the database
-"""
-type Idol implements Talent {
-  id: ID!
-  name: String!
-  groups: [Group!]
-  isSolo: Boolean!
 }
