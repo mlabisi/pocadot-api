@@ -113,5 +113,5 @@ models:
         resolver: true
   Idol:
     fields:
-      idols:
-        groups: true
+      groups:
+        resolver: true
