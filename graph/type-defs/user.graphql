@@ -18,7 +18,7 @@ type UserAccount {
 
   # app data
   biases: [Talent!]! # sharetribeCU | data.attributes.profile.metadata.biases
-  savedListings: [Int!]! # sharetribeCU | data.attributes.profile.metadata.savedListings
+  savedListings: [Listing!]! # sharetribeCU | data.attributes.profile.metadata.savedListings
   savedProfiles: [UserProfile!]! # sharetribeCU | data.attributes.profile.metadata.savedProfiles
   connectedAccounts: [IdentityProvider!]! # sharetribeCU | data.attributes.identityProviders
   profile: UserProfile!
@@ -29,8 +29,8 @@ type UserAccount {
   savedListingNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.savedListingNotifs
 
   # marketplace data
-  listings: [Listing!]! # sharetribeOL
-  offers: [Offer!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
+  createdListings: [Listing!]! # sharetribeOL
+  sentOffers: [Offer!]! # sharetribeTR | where data.attributes.lineItems.includeFor.customer is this UserAccount's id
   banned: Boolean! # sharetribeCU | data.attributes.banned
   deleted: Boolean! # sharetribeCU | data.attributes.deleted
   createdAt: String!  # sharetribeCU | data.attributes.createdAt

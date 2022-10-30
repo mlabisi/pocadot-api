@@ -61,3 +61,57 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  UserAccount:
+    fields:
+      paymentMethods:
+        resolver: true
+      profile:
+        resolver: true
+      biases:
+        resolver: true
+      savedListings:
+        resolver: true
+      savedProfiles:
+        resolver: true
+      connectedAccounts:
+        resolver: true
+      createdListings:
+        resolver: true
+      sentOffers:
+        resolver: true
+  UserProfile:
+    fields:
+      socials:
+        resolver: true
+  Offer:
+    fields:
+      listing:
+        resolver: true
+      madeBy:
+        resolver: true
+      transaction:
+        resolver: true
+  Amount:
+    fields:
+      currency:
+        resolver: true
+      amount:
+        resolver: true
+  Listing:
+    fields:
+      listedBy:
+        resolver: true
+      idols:
+        resolver: true
+      groups:
+        resolver: true
+      offers:
+        resolver: true
+  Group:
+    fields:
+      idols:
+        resolver: true
+  Idol:
+    fields:
+      idols:
+        groups: true

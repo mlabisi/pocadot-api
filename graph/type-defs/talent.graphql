@@ -12,7 +12,7 @@ A group in the database
 type Group implements Talent {
     id: ID!
     name: String!
-    idols: [Idol!]
+    idols: [Idol!]!
 }
 
 """
@@ -21,6 +21,6 @@ An idol in the database
 type Idol implements Talent {
     id: ID!
     name: String!
-    groups: [Group!]
+    groups: [Group!]!
     isSolo: Boolean!
 }
