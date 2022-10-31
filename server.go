@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ func main() {
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv.Use(extension.Introspection{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

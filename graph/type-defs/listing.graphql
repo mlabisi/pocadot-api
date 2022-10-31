@@ -5,7 +5,7 @@ type Listing {
     #basic info
     id: ID!
     type: [ListingType!]!
-    askingPrice: Float!
+    askingPrice: Int!
     condition: CardCondition!
     listedBy: UserAccount!
     international: Boolean!
