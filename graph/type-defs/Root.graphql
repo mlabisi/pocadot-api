@@ -21,6 +21,9 @@ type Query {
 
     talent(input: TalentFilters!): [Talent!]!
     talentFeed: [Talent!]!
+
+    photocards(input: PhotocardFilters!): [Photocard!]!
+    releases(input: ReleaseFilters!): [Release!]!
 }
 
 type Mutation {

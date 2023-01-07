@@ -22,6 +22,8 @@ type UserAccount {
   savedProfiles: [UserProfile!]! # sharetribeCU | data.attributes.profile.metadata.savedProfiles
   connectedAccounts: [IdentityProvider!]! # sharetribeCU | data.attributes.identityProviders
   profile: UserProfile!
+  wishlist: [Photocard!]!
+  collection: [Photocard!]!
 
   # push notification preferences
   generalNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.generalNotifs

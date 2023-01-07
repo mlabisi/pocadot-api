@@ -9,9 +9,7 @@ type Listing {
     condition: CardCondition!
     listedBy: UserAccount!
     international: Boolean!
-    idols: [Idol!]!
-    groups: [Group!]
-    release: String!
+    photocard: Photocard!
     description: String!
     offers: [Offer!]!
 

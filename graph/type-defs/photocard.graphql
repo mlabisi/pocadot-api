@@ -1,0 +1,27 @@
+input ReleaseFilters {
+    ids: [ID!]
+    idolIds: [ID!]
+    groupIds: [ID!]
+}
+
+input PhotocardFilters {
+    ids: [ID!]
+    idolIds: [ID!]
+}
+
+type Photocard {
+    id: ID!
+    hostedImageUrl: String!
+    description: String!
+    tags: [String!]!
+    release: Release!
+}
+
+type Release {
+    id: ID!
+    hostedImageUrl: String!
+    releaseName: String!
+    releaseEpoch: Int!
+    artists: [Talent!]!
+    photocards: [Photocard!]!
+}

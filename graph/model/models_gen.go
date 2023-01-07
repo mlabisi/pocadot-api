@@ -124,13 +124,11 @@ type IdolFilters struct {
 type Listing struct {
 	ID            string         `json:"id"`
 	Type          []ListingType  `json:"type"`
-	AskingPrice   float64        `json:"askingPrice"`
+	AskingPrice   int            `json:"askingPrice"`
 	Condition     CardCondition  `json:"condition"`
 	ListedBy      *UserAccount   `json:"listedBy"`
 	International bool           `json:"international"`
-	Idols         []*Idol        `json:"idols"`
-	Groups        []*Group       `json:"groups"`
-	Release       string         `json:"release"`
+	Photocard     *Photocard     `json:"photocard"`
 	Description   string         `json:"description"`
 	Offers        []*Offer       `json:"offers"`
 	IsFeatured    bool           `json:"isFeatured"`
@@ -183,9 +181,37 @@ type Offer struct {
 	Transaction  *Transaction `json:"transaction"`
 }
 
+type Photocard struct {
+	ID             string   `json:"id"`
+	HostedImageURL string   `json:"hostedImageUrl"`
+	Description    string   `json:"description"`
+	Tags           []string `json:"tags"`
+	Release        *Release `json:"release"`
+}
+
+type PhotocardFilters struct {
+	Ids     []string `json:"ids"`
+	IdolIds []string `json:"idolIds"`
+}
+
 type ProfileFeed struct {
 	Page  int            `json:"page"`
 	Users []*UserProfile `json:"users"`
+}
+
+type Release struct {
+	ID             string       `json:"id"`
+	HostedImageURL string       `json:"hostedImageUrl"`
+	ReleaseName    string       `json:"releaseName"`
+	ReleaseEpoch   int          `json:"releaseEpoch"`
+	Artists        []Talent     `json:"artists"`
+	Photocards     []*Photocard `json:"photocards"`
+}
+
+type ReleaseFilters struct {
+	Ids      []string `json:"ids"`
+	IdolIds  []string `json:"idolIds"`
+	GroupIds []string `json:"groupIds"`
 }
 
 type SendMessageInput struct {
@@ -230,7 +256,7 @@ type Suggestion struct {
 	Listing *Listing `json:"listing"`
 }
 
-// Available filters for the Group type
+// Available filters for the Talent union
 type TalentFilters struct {
 	Ids         []string           `json:"ids"`
 	GroupFields *GroupFilterFields `json:"groupFields"`
@@ -300,6 +326,8 @@ type UserAccount struct {
 	SavedProfiles             []*UserProfile      `json:"savedProfiles"`
 	ConnectedAccounts         []*IdentityProvider `json:"connectedAccounts"`
 	Profile                   *UserProfile        `json:"profile"`
+	Wishlist                  []*Photocard        `json:"wishlist"`
+	Collection                []*Photocard        `json:"collection"`
 	GeneralNotifs             bool                `json:"generalNotifs"`
 	SavedProfileListingNotifs bool                `json:"savedProfileListingNotifs"`
 	SavedListingNotifs        bool                `json:"savedListingNotifs"`

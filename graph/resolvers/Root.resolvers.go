@@ -220,6 +220,16 @@ func (r *queryResolver) TalentFeed(ctx context.Context) ([]model.Talent, error) 
 	panic(fmt.Errorf("not implemented: TalentFeed - talentFeed"))
 }
 
+// Photocards is the resolver for the photocards field.
+func (r *queryResolver) Photocards(ctx context.Context, input model.PhotocardFilters) ([]*model.Photocard, error) {
+	panic(fmt.Errorf("not implemented: Photocards - photocards"))
+}
+
+// Releases is the resolver for the releases field.
+func (r *queryResolver) Releases(ctx context.Context, input model.ReleaseFilters) ([]*model.Release, error) {
+	panic(fmt.Errorf("not implemented: Releases - releases"))
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

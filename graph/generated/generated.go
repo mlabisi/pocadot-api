@@ -88,14 +88,12 @@ type ComplexityRoot struct {
 		AskingPrice   func(childComplexity int) int
 		Condition     func(childComplexity int) int
 		Description   func(childComplexity int) int
-		Groups        func(childComplexity int) int
 		ID            func(childComplexity int) int
-		Idols         func(childComplexity int) int
 		International func(childComplexity int) int
 		IsFeatured    func(childComplexity int) int
 		ListedBy      func(childComplexity int) int
 		Offers        func(childComplexity int) int
-		Release       func(childComplexity int) int
+		Photocard     func(childComplexity int) int
 		SavedBy       func(childComplexity int) int
 		Type          func(childComplexity int) int
 	}
@@ -150,6 +148,14 @@ type ComplexityRoot struct {
 		Transaction  func(childComplexity int) int
 	}
 
+	Photocard struct {
+		Description    func(childComplexity int) int
+		HostedImageURL func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Release        func(childComplexity int) int
+		Tags           func(childComplexity int) int
+	}
+
 	ProfileFeed struct {
 		Page  func(childComplexity int) int
 		Users func(childComplexity int) int
@@ -166,12 +172,23 @@ type ComplexityRoot struct {
 		ListingsFeed     func(childComplexity int) int
 		MyAccount        func(childComplexity int) int
 		MyProfile        func(childComplexity int) int
+		Photocards       func(childComplexity int, input model.PhotocardFilters) int
 		Profile          func(childComplexity int, input string) int
+		Releases         func(childComplexity int, input model.ReleaseFilters) int
 		Talent           func(childComplexity int, input model.TalentFilters) int
 		TalentFeed       func(childComplexity int) int
 		UserSuggestions  func(childComplexity int, input string) int
 		Users            func(childComplexity int, input model.UserFilters) int
 		UsersFeed        func(childComplexity int, page int) int
+	}
+
+	Release struct {
+		Artists        func(childComplexity int) int
+		HostedImageURL func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Photocards     func(childComplexity int) int
+		ReleaseEpoch   func(childComplexity int) int
+		ReleaseName    func(childComplexity int) int
 	}
 
 	SocialProfile struct {
@@ -203,6 +220,7 @@ type ComplexityRoot struct {
 	UserAccount struct {
 		Banned                    func(childComplexity int) int
 		Biases                    func(childComplexity int) int
+		Collection                func(childComplexity int) int
 		ConnectedAccounts         func(childComplexity int) int
 		Country                   func(childComplexity int) int
 		CreatedAt                 func(childComplexity int) int
@@ -224,6 +242,7 @@ type ComplexityRoot struct {
 		SavedProfiles             func(childComplexity int) int
 		SentOffers                func(childComplexity int) int
 		SuggestedListings         func(childComplexity int) int
+		Wishlist                  func(childComplexity int) int
 	}
 
 	UserProfile struct {
@@ -246,9 +265,6 @@ type IdolResolver interface {
 }
 type ListingResolver interface {
 	ListedBy(ctx context.Context, obj *model.Listing) (*model.UserAccount, error)
-
-	Idols(ctx context.Context, obj *model.Listing) ([]*model.Idol, error)
-	Groups(ctx context.Context, obj *model.Listing) ([]*model.Group, error)
 
 	Offers(ctx context.Context, obj *model.Listing) ([]*model.Offer, error)
 }
@@ -303,6 +319,8 @@ type QueryResolver interface {
 	GroupsFeed(ctx context.Context, page int) (*model.GroupFeed, error)
 	Talent(ctx context.Context, input model.TalentFilters) ([]model.Talent, error)
 	TalentFeed(ctx context.Context) ([]model.Talent, error)
+	Photocards(ctx context.Context, input model.PhotocardFilters) ([]*model.Photocard, error)
+	Releases(ctx context.Context, input model.ReleaseFilters) ([]*model.Release, error)
 }
 type UserAccountResolver interface {
 	PaymentMethods(ctx context.Context, obj *model.UserAccount) ([]model.PaymentMethod, error)
@@ -460,26 +478,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Listing.Description(childComplexity), true
 
-	case "Listing.groups":
-		if e.complexity.Listing.Groups == nil {
-			break
-		}
-
-		return e.complexity.Listing.Groups(childComplexity), true
-
 	case "Listing.id":
 		if e.complexity.Listing.ID == nil {
 			break
 		}
 
 		return e.complexity.Listing.ID(childComplexity), true
-
-	case "Listing.idols":
-		if e.complexity.Listing.Idols == nil {
-			break
-		}
-
-		return e.complexity.Listing.Idols(childComplexity), true
 
 	case "Listing.international":
 		if e.complexity.Listing.International == nil {
@@ -509,12 +513,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Listing.Offers(childComplexity), true
 
-	case "Listing.release":
-		if e.complexity.Listing.Release == nil {
+	case "Listing.photocard":
+		if e.complexity.Listing.Photocard == nil {
 			break
 		}
 
-		return e.complexity.Listing.Release(childComplexity), true
+		return e.complexity.Listing.Photocard(childComplexity), true
 
 	case "Listing.savedBy":
 		if e.complexity.Listing.SavedBy == nil {
@@ -866,6 +870,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Offer.Transaction(childComplexity), true
 
+	case "Photocard.description":
+		if e.complexity.Photocard.Description == nil {
+			break
+		}
+
+		return e.complexity.Photocard.Description(childComplexity), true
+
+	case "Photocard.hostedImageUrl":
+		if e.complexity.Photocard.HostedImageURL == nil {
+			break
+		}
+
+		return e.complexity.Photocard.HostedImageURL(childComplexity), true
+
+	case "Photocard.id":
+		if e.complexity.Photocard.ID == nil {
+			break
+		}
+
+		return e.complexity.Photocard.ID(childComplexity), true
+
+	case "Photocard.release":
+		if e.complexity.Photocard.Release == nil {
+			break
+		}
+
+		return e.complexity.Photocard.Release(childComplexity), true
+
+	case "Photocard.tags":
+		if e.complexity.Photocard.Tags == nil {
+			break
+		}
+
+		return e.complexity.Photocard.Tags(childComplexity), true
+
 	case "ProfileFeed.page":
 		if e.complexity.ProfileFeed.Page == nil {
 			break
@@ -980,6 +1019,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MyProfile(childComplexity), true
 
+	case "Query.photocards":
+		if e.complexity.Query.Photocards == nil {
+			break
+		}
+
+		args, err := ec.field_Query_photocards_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Photocards(childComplexity, args["input"].(model.PhotocardFilters)), true
+
 	case "Query.profile":
 		if e.complexity.Query.Profile == nil {
 			break
@@ -991,6 +1042,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Profile(childComplexity, args["input"].(string)), true
+
+	case "Query.releases":
+		if e.complexity.Query.Releases == nil {
+			break
+		}
+
+		args, err := ec.field_Query_releases_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Releases(childComplexity, args["input"].(model.ReleaseFilters)), true
 
 	case "Query.talent":
 		if e.complexity.Query.Talent == nil {
@@ -1046,6 +1109,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.UsersFeed(childComplexity, args["page"].(int)), true
+
+	case "Release.artists":
+		if e.complexity.Release.Artists == nil {
+			break
+		}
+
+		return e.complexity.Release.Artists(childComplexity), true
+
+	case "Release.hostedImageUrl":
+		if e.complexity.Release.HostedImageURL == nil {
+			break
+		}
+
+		return e.complexity.Release.HostedImageURL(childComplexity), true
+
+	case "Release.id":
+		if e.complexity.Release.ID == nil {
+			break
+		}
+
+		return e.complexity.Release.ID(childComplexity), true
+
+	case "Release.photocards":
+		if e.complexity.Release.Photocards == nil {
+			break
+		}
+
+		return e.complexity.Release.Photocards(childComplexity), true
+
+	case "Release.releaseEpoch":
+		if e.complexity.Release.ReleaseEpoch == nil {
+			break
+		}
+
+		return e.complexity.Release.ReleaseEpoch(childComplexity), true
+
+	case "Release.releaseName":
+		if e.complexity.Release.ReleaseName == nil {
+			break
+		}
+
+		return e.complexity.Release.ReleaseName(childComplexity), true
 
 	case "SocialProfile.type":
 		if e.complexity.SocialProfile.Type == nil {
@@ -1158,6 +1263,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAccount.Biases(childComplexity), true
+
+	case "UserAccount.collection":
+		if e.complexity.UserAccount.Collection == nil {
+			break
+		}
+
+		return e.complexity.UserAccount.Collection(childComplexity), true
 
 	case "UserAccount.connectedAccounts":
 		if e.complexity.UserAccount.ConnectedAccounts == nil {
@@ -1306,6 +1418,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserAccount.SuggestedListings(childComplexity), true
 
+	case "UserAccount.wishlist":
+		if e.complexity.UserAccount.Wishlist == nil {
+			break
+		}
+
+		return e.complexity.UserAccount.Wishlist(childComplexity), true
+
 	case "UserProfile.description":
 		if e.complexity.UserProfile.Description == nil {
 			break
@@ -1350,6 +1469,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputIdolFilters,
 		ec.unmarshalInputListingFieldFilters,
 		ec.unmarshalInputListingFilters,
+		ec.unmarshalInputPhotocardFilters,
+		ec.unmarshalInputReleaseFilters,
 		ec.unmarshalInputSendMessageInput,
 		ec.unmarshalInputStartChatInput,
 		ec.unmarshalInputTalentFilters,
@@ -1442,6 +1563,9 @@ var sources = []*ast.Source{
 
     talent(input: TalentFilters!): [Talent!]!
     talentFeed: [Talent!]!
+
+    photocards(input: PhotocardFilters!): [Photocard!]!
+    releases(input: ReleaseFilters!): [Release!]!
 }
 
 type Mutation {
@@ -1484,13 +1608,11 @@ type Listing {
     #basic info
     id: ID!
     type: [ListingType!]!
-    askingPrice: Float!
+    askingPrice: Int!
     condition: CardCondition!
     listedBy: UserAccount!
     international: Boolean!
-    idols: [Idol!]!
-    groups: [Group!]
-    release: String!
+    photocard: Photocard!
     description: String!
     offers: [Offer!]!
 
@@ -1689,6 +1811,33 @@ type StripePaymentMethod implements PaymentMethod {
     expirationMonth: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationMonth
     expirationYear: String! # sharetribeCU | data.relationships.stripeCustomer.defaultPaymentMethod.expirationYear
 }`, BuiltIn: false},
+	{Name: "../type-defs/photocard.graphql", Input: `input ReleaseFilters {
+    ids: [ID!]
+    idolIds: [ID!]
+    groupIds: [ID!]
+}
+
+input PhotocardFilters {
+    ids: [ID!]
+    idolIds: [ID!]
+}
+
+type Photocard {
+    id: ID!
+    hostedImageUrl: String!
+    description: String!
+    tags: [String!]!
+    release: Release!
+}
+
+type Release {
+    id: ID!
+    hostedImageUrl: String!
+    releaseName: String!
+    releaseEpoch: Int!
+    artists: [Talent!]!
+    photocards: [Photocard!]!
+}`, BuiltIn: false},
 	{Name: "../type-defs/suggestions.graphql", Input: `"""
 A listing recommendation
 """
@@ -1706,7 +1855,7 @@ interface Talent {
 }
 
 """
-Available filters for the Group type
+Available filters for the Talent union
 """
 input TalentFilters {
     ids: [ID!]
@@ -1799,6 +1948,8 @@ type UserAccount {
   savedProfiles: [UserProfile!]! # sharetribeCU | data.attributes.profile.metadata.savedProfiles
   connectedAccounts: [IdentityProvider!]! # sharetribeCU | data.attributes.identityProviders
   profile: UserProfile!
+  wishlist: [Photocard!]!
+  collection: [Photocard!]!
 
   # push notification preferences
   generalNotifs: Boolean! # sharetribeCU | data.attributes.profile.metadata.generalNotifs
@@ -2239,6 +2390,21 @@ func (ec *executionContext) field_Query_listings_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_photocards_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.PhotocardFilters
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNPhotocardFilters2pocadotᚑapiᚋgraphᚋmodelᚐPhotocardFilters(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_profile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2246,6 +2412,21 @@ func (ec *executionContext) field_Query_profile_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_releases_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ReleaseFilters
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNReleaseFilters2pocadotᚑapiᚋgraphᚋmodelᚐReleaseFilters(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3162,9 +3343,9 @@ func (ec *executionContext) _Listing_askingPrice(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Listing_askingPrice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3174,7 +3355,7 @@ func (ec *executionContext) fieldContext_Listing_askingPrice(ctx context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3287,6 +3468,10 @@ func (ec *executionContext) fieldContext_Listing_listedBy(ctx context.Context, f
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -3360,8 +3545,8 @@ func (ec *executionContext) fieldContext_Listing_international(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Listing_idols(ctx context.Context, field graphql.CollectedField, obj *model.Listing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Listing_idols(ctx, field)
+func (ec *executionContext) _Listing_photocard(ctx context.Context, field graphql.CollectedField, obj *model.Listing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Listing_photocard(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3374,7 +3559,7 @@ func (ec *executionContext) _Listing_idols(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Listing().Idols(rctx, obj)
+		return obj.Photocard, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3386,122 +3571,31 @@ func (ec *executionContext) _Listing_idols(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Idol)
+	res := resTmp.(*model.Photocard)
 	fc.Result = res
-	return ec.marshalNIdol2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐIdolᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhotocard2ᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocard(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Listing_idols(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Listing",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Idol_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Idol_name(ctx, field)
-			case "groups":
-				return ec.fieldContext_Idol_groups(ctx, field)
-			case "isSolo":
-				return ec.fieldContext_Idol_isSolo(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Idol", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Listing_groups(ctx context.Context, field graphql.CollectedField, obj *model.Listing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Listing_groups(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Listing().Groups(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Group)
-	fc.Result = res
-	return ec.marshalOGroup2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐGroupᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Listing_groups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Listing",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Group_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Group_name(ctx, field)
-			case "idols":
-				return ec.fieldContext_Group_idols(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Group", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Listing_release(ctx context.Context, field graphql.CollectedField, obj *model.Listing) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Listing_release(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Release, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Listing_release(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Listing_photocard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Listing",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
 		},
 	}
 	return fc, nil
@@ -3716,6 +3810,10 @@ func (ec *executionContext) fieldContext_Listing_savedBy(ctx context.Context, fi
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -3840,12 +3938,8 @@ func (ec *executionContext) fieldContext_ListingFeed_listings(ctx context.Contex
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -3968,6 +4062,10 @@ func (ec *executionContext) fieldContext_Message_author(ctx context.Context, fie
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4060,6 +4158,10 @@ func (ec *executionContext) fieldContext_Message_recipient(ctx context.Context, 
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4196,6 +4298,10 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4288,6 +4394,10 @@ func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, fi
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4380,6 +4490,10 @@ func (ec *executionContext) fieldContext_Mutation_createAccount(ctx context.Cont
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4472,6 +4586,10 @@ func (ec *executionContext) fieldContext_Mutation_deleteAccount(ctx context.Cont
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4575,6 +4693,10 @@ func (ec *executionContext) fieldContext_Mutation_updateAccount(ctx context.Cont
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4667,6 +4789,10 @@ func (ec *executionContext) fieldContext_Mutation_changePassword(ctx context.Con
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4759,6 +4885,10 @@ func (ec *executionContext) fieldContext_Mutation_forgetPassword(ctx context.Con
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4851,6 +4981,10 @@ func (ec *executionContext) fieldContext_Mutation_resetPassword(ctx context.Cont
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -4931,12 +5065,8 @@ func (ec *executionContext) fieldContext_Mutation_addListing(ctx context.Context
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -5014,12 +5144,8 @@ func (ec *executionContext) fieldContext_Mutation_faveListing(ctx context.Contex
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -5097,12 +5223,8 @@ func (ec *executionContext) fieldContext_Mutation_unfaveListing(ctx context.Cont
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -5180,12 +5302,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteListings(ctx context.Con
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -5263,12 +5381,8 @@ func (ec *executionContext) fieldContext_Mutation_skipSuggestedListing(ctx conte
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -6200,12 +6314,8 @@ func (ec *executionContext) fieldContext_Offer_listing(ctx context.Context, fiel
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -6284,6 +6394,10 @@ func (ec *executionContext) fieldContext_Offer_madeBy(ctx context.Context, field
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -6460,6 +6574,240 @@ func (ec *executionContext) fieldContext_Offer_transaction(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Photocard_id(ctx context.Context, field graphql.CollectedField, obj *model.Photocard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Photocard_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Photocard_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Photocard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Photocard_hostedImageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Photocard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HostedImageURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Photocard_hostedImageUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Photocard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Photocard_description(ctx context.Context, field graphql.CollectedField, obj *model.Photocard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Photocard_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Photocard_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Photocard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Photocard_tags(ctx context.Context, field graphql.CollectedField, obj *model.Photocard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Photocard_tags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Photocard_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Photocard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Photocard_release(ctx context.Context, field graphql.CollectedField, obj *model.Photocard) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Photocard_release(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Release, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Release)
+	fc.Result = res
+	return ec.marshalNRelease2ᚖpocadotᚑapiᚋgraphᚋmodelᚐRelease(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Photocard_release(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Photocard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Release_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Release_hostedImageUrl(ctx, field)
+			case "releaseName":
+				return ec.fieldContext_Release_releaseName(ctx, field)
+			case "releaseEpoch":
+				return ec.fieldContext_Release_releaseEpoch(ctx, field)
+			case "artists":
+				return ec.fieldContext_Release_artists(ctx, field)
+			case "photocards":
+				return ec.fieldContext_Release_photocards(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Release", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ProfileFeed_page(ctx context.Context, field graphql.CollectedField, obj *model.ProfileFeed) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProfileFeed_page(ctx, field)
 	if err != nil {
@@ -6621,6 +6969,10 @@ func (ec *executionContext) fieldContext_Query_account(ctx context.Context, fiel
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -6789,6 +7141,10 @@ func (ec *executionContext) fieldContext_Query_myAccount(ctx context.Context, fi
 				return ec.fieldContext_UserAccount_connectedAccounts(ctx, field)
 			case "profile":
 				return ec.fieldContext_UserAccount_profile(ctx, field)
+			case "wishlist":
+				return ec.fieldContext_UserAccount_wishlist(ctx, field)
+			case "collection":
+				return ec.fieldContext_UserAccount_collection(ctx, field)
 			case "generalNotifs":
 				return ec.fieldContext_UserAccount_generalNotifs(ctx, field)
 			case "savedProfileListingNotifs":
@@ -6923,12 +7279,8 @@ func (ec *executionContext) fieldContext_Query_listings(ctx context.Context, fie
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -7006,12 +7358,8 @@ func (ec *executionContext) fieldContext_Query_listingsFeed(ctx context.Context,
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -7078,12 +7426,8 @@ func (ec *executionContext) fieldContext_Query_userSuggestions(ctx context.Conte
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -7161,12 +7505,8 @@ func (ec *executionContext) fieldContext_Query_featuredListings(ctx context.Cont
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -7657,6 +7997,142 @@ func (ec *executionContext) fieldContext_Query_talentFeed(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_photocards(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_photocards(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Photocards(rctx, fc.Args["input"].(model.PhotocardFilters))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Photocard)
+	fc.Result = res
+	return ec.marshalNPhotocard2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocardᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_photocards(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_photocards_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_releases(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_releases(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Releases(rctx, fc.Args["input"].(model.ReleaseFilters))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Release)
+	fc.Result = res
+	return ec.marshalNRelease2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐReleaseᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_releases(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Release_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Release_hostedImageUrl(ctx, field)
+			case "releaseName":
+				return ec.fieldContext_Release_releaseName(ctx, field)
+			case "releaseEpoch":
+				return ec.fieldContext_Release_releaseEpoch(ctx, field)
+			case "artists":
+				return ec.fieldContext_Release_artists(ctx, field)
+			case "photocards":
+				return ec.fieldContext_Release_photocards(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Release", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_releases_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -7781,6 +8257,282 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_id(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_hostedImageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_hostedImageUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HostedImageURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_hostedImageUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_releaseName(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_releaseName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReleaseName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_releaseName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_releaseEpoch(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_releaseEpoch(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReleaseEpoch, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_releaseEpoch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_artists(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_artists(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Artists, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.Talent)
+	fc.Result = res
+	return ec.marshalNTalent2ᚕpocadotᚑapiᚋgraphᚋmodelᚐTalentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_artists(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("FieldContext.Child cannot be called on type INTERFACE")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Release_photocards(ctx context.Context, field graphql.CollectedField, obj *model.Release) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Release_photocards(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photocards, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Photocard)
+	fc.Result = res
+	return ec.marshalNPhotocard2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocardᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Release_photocards(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Release",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
 		},
 	}
 	return fc, nil
@@ -8277,12 +9029,8 @@ func (ec *executionContext) fieldContext_Suggestion_listing(ctx context.Context,
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -8845,12 +9593,8 @@ func (ec *executionContext) fieldContext_UserAccount_savedListings(ctx context.C
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -9019,6 +9763,118 @@ func (ec *executionContext) fieldContext_UserAccount_profile(ctx context.Context
 				return ec.fieldContext_UserProfile_profilePicId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccount_wishlist(ctx context.Context, field graphql.CollectedField, obj *model.UserAccount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccount_wishlist(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Wishlist, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Photocard)
+	fc.Result = res
+	return ec.marshalNPhotocard2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocardᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccount_wishlist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserAccount_collection(ctx context.Context, field graphql.CollectedField, obj *model.UserAccount) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserAccount_collection(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Collection, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Photocard)
+	fc.Result = res
+	return ec.marshalNPhotocard2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocardᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserAccount_collection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
 		},
 	}
 	return fc, nil
@@ -9207,12 +10063,8 @@ func (ec *executionContext) fieldContext_UserAccount_suggestedListings(ctx conte
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -9279,12 +10131,8 @@ func (ec *executionContext) fieldContext_UserAccount_createdListings(ctx context
 				return ec.fieldContext_Listing_listedBy(ctx, field)
 			case "international":
 				return ec.fieldContext_Listing_international(ctx, field)
-			case "idols":
-				return ec.fieldContext_Listing_idols(ctx, field)
-			case "groups":
-				return ec.fieldContext_Listing_groups(ctx, field)
-			case "release":
-				return ec.fieldContext_Listing_release(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Listing_photocard(ctx, field)
 			case "description":
 				return ec.fieldContext_Listing_description(ctx, field)
 			case "offers":
@@ -12066,6 +12914,86 @@ func (ec *executionContext) unmarshalInputListingFilters(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPhotocardFilters(ctx context.Context, obj interface{}) (model.PhotocardFilters, error) {
+	var it model.PhotocardFilters
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ids", "idolIds"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idolIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idolIds"))
+			it.IdolIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputReleaseFilters(ctx context.Context, obj interface{}) (model.ReleaseFilters, error) {
+	var it model.ReleaseFilters
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ids", "idolIds", "groupIds"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idolIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idolIds"))
+			it.IdolIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "groupIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupIds"))
+			it.GroupIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSendMessageInput(ctx context.Context, obj interface{}) (model.SendMessageInput, error) {
 	var it model.SendMessageInput
 	asMap := map[string]interface{}{}
@@ -13033,46 +13961,9 @@ func (ec *executionContext) _Listing(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "idols":
-			field := field
+		case "photocard":
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Listing_idols(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "groups":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Listing_groups(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "release":
-
-			out.Values[i] = ec._Listing_release(ctx, field, obj)
+			out.Values[i] = ec._Listing_photocard(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -13576,6 +14467,62 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var photocardImplementors = []string{"Photocard"}
+
+func (ec *executionContext) _Photocard(ctx context.Context, sel ast.SelectionSet, obj *model.Photocard) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, photocardImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Photocard")
+		case "id":
+
+			out.Values[i] = ec._Photocard_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hostedImageUrl":
+
+			out.Values[i] = ec._Photocard_hostedImageUrl(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+
+			out.Values[i] = ec._Photocard_description(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "tags":
+
+			out.Values[i] = ec._Photocard_tags(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "release":
+
+			out.Values[i] = ec._Photocard_release(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var profileFeedImplementors = []string{"ProfileFeed"}
 
 func (ec *executionContext) _ProfileFeed(ctx context.Context, sel ast.SelectionSet, obj *model.ProfileFeed) graphql.Marshaler {
@@ -13998,6 +14945,52 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "photocards":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_photocards(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "releases":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_releases(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -14010,6 +15003,69 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var releaseImplementors = []string{"Release"}
+
+func (ec *executionContext) _Release(ctx context.Context, sel ast.SelectionSet, obj *model.Release) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, releaseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Release")
+		case "id":
+
+			out.Values[i] = ec._Release_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hostedImageUrl":
+
+			out.Values[i] = ec._Release_hostedImageUrl(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "releaseName":
+
+			out.Values[i] = ec._Release_releaseName(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "releaseEpoch":
+
+			out.Values[i] = ec._Release_releaseEpoch(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "artists":
+
+			out.Values[i] = ec._Release_artists(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "photocards":
+
+			out.Values[i] = ec._Release_photocards(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14375,6 +15431,20 @@ func (ec *executionContext) _UserAccount(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
+		case "wishlist":
+
+			out.Values[i] = ec._UserAccount_wishlist(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "collection":
+
+			out.Values[i] = ec._UserAccount_collection(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "generalNotifs":
 
 			out.Values[i] = ec._UserAccount_generalNotifs(ctx, field, obj)
@@ -14904,21 +15974,6 @@ func (ec *executionContext) unmarshalNCardCondition2pocadotᚑapiᚋgraphᚋmode
 
 func (ec *executionContext) marshalNCardCondition2pocadotᚑapiᚋgraphᚋmodelᚐCardCondition(ctx context.Context, sel ast.SelectionSet, v model.CardCondition) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
-	res, err := graphql.UnmarshalFloatContext(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
-	res := graphql.MarshalFloatContext(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) marshalNGroup2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
@@ -15517,6 +16572,65 @@ func (ec *executionContext) marshalNPaymentMethodType2pocadotᚑapiᚋgraphᚋmo
 	return v
 }
 
+func (ec *executionContext) marshalNPhotocard2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocardᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Photocard) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPhotocard2ᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocard(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPhotocard2ᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocard(ctx context.Context, sel ast.SelectionSet, v *model.Photocard) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Photocard(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPhotocardFilters2pocadotᚑapiᚋgraphᚋmodelᚐPhotocardFilters(ctx context.Context, v interface{}) (model.PhotocardFilters, error) {
+	res, err := ec.unmarshalInputPhotocardFilters(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNProfileFeed2pocadotᚑapiᚋgraphᚋmodelᚐProfileFeed(ctx context.Context, sel ast.SelectionSet, v model.ProfileFeed) graphql.Marshaler {
 	return ec._ProfileFeed(ctx, sel, &v)
 }
@@ -15529,6 +16643,65 @@ func (ec *executionContext) marshalNProfileFeed2ᚖpocadotᚑapiᚋgraphᚋmodel
 		return graphql.Null
 	}
 	return ec._ProfileFeed(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRelease2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐReleaseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Release) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRelease2ᚖpocadotᚑapiᚋgraphᚋmodelᚐRelease(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRelease2ᚖpocadotᚑapiᚋgraphᚋmodelᚐRelease(ctx context.Context, sel ast.SelectionSet, v *model.Release) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Release(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNReleaseFilters2pocadotᚑapiᚋgraphᚋmodelᚐReleaseFilters(ctx context.Context, v interface{}) (model.ReleaseFilters, error) {
+	res, err := ec.unmarshalInputReleaseFilters(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSendMessageInput2pocadotᚑapiᚋgraphᚋmodelᚐSendMessageInput(ctx context.Context, v interface{}) (model.SendMessageInput, error) {
@@ -15613,6 +16786,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTalent2pocadotᚑapiᚋgraphᚋmodelᚐTalent(ctx context.Context, sel ast.SelectionSet, v model.Talent) graphql.Marshaler {
@@ -16118,53 +17323,6 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
-}
-
-func (ec *executionContext) marshalOGroup2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNGroup2ᚖpocadotᚑapiᚋgraphᚋmodelᚐGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOGroupFilterFields2ᚖpocadotᚑapiᚋgraphᚋmodelᚐGroupFilterFields(ctx context.Context, v interface{}) (*model.GroupFilterFields, error) {

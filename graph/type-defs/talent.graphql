@@ -7,7 +7,7 @@ interface Talent {
 }
 
 """
-Available filters for the Group type
+Available filters for the Talent union
 """
 input TalentFilters {
     ids: [ID!]
