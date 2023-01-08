@@ -6,8 +6,27 @@ type Offer {
     listing: Listing!
     madeBy: UserAccount!
     status: OfferStatus!
+    description: String!
     conversation: [Message!]!
     transaction: Transaction
+    price: Amount!
+    photocard: Photocard
+}
+
+type CounterOffer {
+    id: ID!
+    original: Offer!
+    description: String!
+    modifications: [OfferModification!]!
+}
+
+"""
+The modifications that can be requested for an offer
+"""
+enum OfferModification {
+    INCREASE_PRICE
+    DECREASE_PRICE
+    CHANGE_PHOTOCARD
 }
 
 """
@@ -20,6 +39,27 @@ enum OfferStatus {
     REJECTED
     EDITED
     OPEN
+}
+
+input MakeOfferInput {
+    listingId: ID!
+    madeById: ID!
+    description: String!
+    amount: Int!
+    currency: String!
+    photocardId: ID!
+}
+
+input UpdateOfferInput {
+    description: String
+    amount: Int
+    currency: String
+    photocardId: ID
+}
+
+input NegotiateOfferInput {
+    modifications: [OfferModification!]!
+    description: String!
 }
 
 """
