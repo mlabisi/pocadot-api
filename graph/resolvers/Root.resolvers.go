@@ -96,12 +96,12 @@ func (r *mutationResolver) ReportProfile(ctx context.Context, input string) (*mo
 }
 
 // MakeOffer is the resolver for the makeOffer field.
-func (r *mutationResolver) MakeOffer(ctx context.Context) (*model.Offer, error) {
+func (r *mutationResolver) MakeOffer(ctx context.Context, input model.MakeOfferInput) (*model.Offer, error) {
 	panic(fmt.Errorf("not implemented: MakeOffer - makeOffer"))
 }
 
 // UpdateOffer is the resolver for the updateOffer field.
-func (r *mutationResolver) UpdateOffer(ctx context.Context) (*model.Offer, error) {
+func (r *mutationResolver) UpdateOffer(ctx context.Context, input model.UpdateOfferInput) (*model.Offer, error) {
 	panic(fmt.Errorf("not implemented: UpdateOffer - updateOffer"))
 }
 
@@ -116,7 +116,7 @@ func (r *mutationResolver) AcceptOffer(ctx context.Context, input string) (*mode
 }
 
 // NegotiateOffer is the resolver for the negotiateOffer field.
-func (r *mutationResolver) NegotiateOffer(ctx context.Context) (*model.Offer, error) {
+func (r *mutationResolver) NegotiateOffer(ctx context.Context, input model.NegotiateOfferInput) (*model.CounterOffer, error) {
 	panic(fmt.Errorf("not implemented: NegotiateOffer - negotiateOffer"))
 }
 

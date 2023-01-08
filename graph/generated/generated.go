@@ -56,6 +56,13 @@ type ComplexityRoot struct {
 		Currency func(childComplexity int) int
 	}
 
+	CounterOffer struct {
+		Description   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Modifications func(childComplexity int) int
+		Original      func(childComplexity int) int
+	}
+
 	Group struct {
 		ID    func(childComplexity int) int
 		Idols func(childComplexity int) int
@@ -124,9 +131,9 @@ type ComplexityRoot struct {
 		ForgetPassword       func(childComplexity int) int
 		Login                func(childComplexity int) int
 		Logout               func(childComplexity int) int
-		MakeOffer            func(childComplexity int) int
+		MakeOffer            func(childComplexity int, input model.MakeOfferInput) int
 		MakePayment          func(childComplexity int) int
-		NegotiateOffer       func(childComplexity int) int
+		NegotiateOffer       func(childComplexity int, input model.NegotiateOfferInput) int
 		RejectOffer          func(childComplexity int, input string) int
 		ReportProfile        func(childComplexity int, input string) int
 		RescindOffer         func(childComplexity int, input string) int
@@ -136,14 +143,17 @@ type ComplexityRoot struct {
 		UnfaveListing        func(childComplexity int, input string) int
 		UnfaveProfile        func(childComplexity int, input string) int
 		UpdateAccount        func(childComplexity int) int
-		UpdateOffer          func(childComplexity int) int
+		UpdateOffer          func(childComplexity int, input model.UpdateOfferInput) int
 	}
 
 	Offer struct {
 		Conversation func(childComplexity int) int
+		Description  func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Listing      func(childComplexity int) int
 		MadeBy       func(childComplexity int) int
+		Photocard    func(childComplexity int) int
+		Price        func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Transaction  func(childComplexity int) int
 	}
@@ -286,11 +296,11 @@ type MutationResolver interface {
 	UnfaveProfile(ctx context.Context, input string) (*model.UserProfile, error)
 	BlockProfile(ctx context.Context, input string) (*model.UserProfile, error)
 	ReportProfile(ctx context.Context, input string) (*model.UserProfile, error)
-	MakeOffer(ctx context.Context) (*model.Offer, error)
-	UpdateOffer(ctx context.Context) (*model.Offer, error)
+	MakeOffer(ctx context.Context, input model.MakeOfferInput) (*model.Offer, error)
+	UpdateOffer(ctx context.Context, input model.UpdateOfferInput) (*model.Offer, error)
 	RescindOffer(ctx context.Context, input string) (*model.Offer, error)
 	AcceptOffer(ctx context.Context, input string) (*model.Offer, error)
-	NegotiateOffer(ctx context.Context) (*model.Offer, error)
+	NegotiateOffer(ctx context.Context, input model.NegotiateOfferInput) (*model.CounterOffer, error)
 	RejectOffer(ctx context.Context, input string) (*model.Offer, error)
 	SendMessage(ctx context.Context, input model.SendMessageInput) (*model.Message, error)
 	MakePayment(ctx context.Context) (*model.Transaction, error)
@@ -365,6 +375,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Amount.Currency(childComplexity), true
+
+	case "CounterOffer.description":
+		if e.complexity.CounterOffer.Description == nil {
+			break
+		}
+
+		return e.complexity.CounterOffer.Description(childComplexity), true
+
+	case "CounterOffer.id":
+		if e.complexity.CounterOffer.ID == nil {
+			break
+		}
+
+		return e.complexity.CounterOffer.ID(childComplexity), true
+
+	case "CounterOffer.modifications":
+		if e.complexity.CounterOffer.Modifications == nil {
+			break
+		}
+
+		return e.complexity.CounterOffer.Modifications(childComplexity), true
+
+	case "CounterOffer.original":
+		if e.complexity.CounterOffer.Original == nil {
+			break
+		}
+
+		return e.complexity.CounterOffer.Original(childComplexity), true
 
 	case "Group.id":
 		if e.complexity.Group.ID == nil {
@@ -707,7 +745,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.MakeOffer(childComplexity), true
+		args, err := ec.field_Mutation_makeOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MakeOffer(childComplexity, args["input"].(model.MakeOfferInput)), true
 
 	case "Mutation.makePayment":
 		if e.complexity.Mutation.MakePayment == nil {
@@ -721,7 +764,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.NegotiateOffer(childComplexity), true
+		args, err := ec.field_Mutation_negotiateOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NegotiateOffer(childComplexity, args["input"].(model.NegotiateOfferInput)), true
 
 	case "Mutation.rejectOffer":
 		if e.complexity.Mutation.RejectOffer == nil {
@@ -826,7 +874,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.UpdateOffer(childComplexity), true
+		args, err := ec.field_Mutation_updateOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateOffer(childComplexity, args["input"].(model.UpdateOfferInput)), true
 
 	case "Offer.conversation":
 		if e.complexity.Offer.Conversation == nil {
@@ -834,6 +887,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.Conversation(childComplexity), true
+
+	case "Offer.description":
+		if e.complexity.Offer.Description == nil {
+			break
+		}
+
+		return e.complexity.Offer.Description(childComplexity), true
 
 	case "Offer.id":
 		if e.complexity.Offer.ID == nil {
@@ -855,6 +915,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.MadeBy(childComplexity), true
+
+	case "Offer.photocard":
+		if e.complexity.Offer.Photocard == nil {
+			break
+		}
+
+		return e.complexity.Offer.Photocard(childComplexity), true
+
+	case "Offer.price":
+		if e.complexity.Offer.Price == nil {
+			break
+		}
+
+		return e.complexity.Offer.Price(childComplexity), true
 
 	case "Offer.status":
 		if e.complexity.Offer.Status == nil {
@@ -1469,6 +1543,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputIdolFilters,
 		ec.unmarshalInputListingFieldFilters,
 		ec.unmarshalInputListingFilters,
+		ec.unmarshalInputMakeOfferInput,
+		ec.unmarshalInputNegotiateOfferInput,
 		ec.unmarshalInputPhotocardFilters,
 		ec.unmarshalInputReleaseFilters,
 		ec.unmarshalInputSendMessageInput,
@@ -1476,6 +1552,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTalentFilters,
 		ec.unmarshalInputUniqueChatInput,
 		ec.unmarshalInputUpdateListingInput,
+		ec.unmarshalInputUpdateOfferInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUserFilterFields,
 		ec.unmarshalInputUserFilters,
@@ -1590,11 +1667,11 @@ type Mutation {
     blockProfile(input: ID!): UserProfile!
     reportProfile(input: ID!): UserProfile!
 
-    makeOffer: Offer!
-    updateOffer: Offer!
+    makeOffer(input: MakeOfferInput!): Offer!
+    updateOffer(input: UpdateOfferInput!): Offer!
     rescindOffer(input: ID!): Offer!
     acceptOffer(input: ID!): Offer!
-    negotiateOffer: Offer!
+    negotiateOffer(input: NegotiateOfferInput!): CounterOffer!
     rejectOffer(input: ID!): Offer!
     sendMessage(input: SendMessageInput!): Message!
 
@@ -1749,8 +1826,27 @@ type Offer {
     listing: Listing!
     madeBy: UserAccount!
     status: OfferStatus!
+    description: String!
     conversation: [Message!]!
     transaction: Transaction
+    price: Amount!
+    photocard: Photocard
+}
+
+type CounterOffer {
+    id: ID!
+    original: Offer!
+    description: String!
+    modifications: [OfferModification!]!
+}
+
+"""
+The modifications that can be requested for an offer
+"""
+enum OfferModification {
+    INCREASE_PRICE
+    DECREASE_PRICE
+    CHANGE_PHOTOCARD
 }
 
 """
@@ -1763,6 +1859,27 @@ enum OfferStatus {
     REJECTED
     EDITED
     OPEN
+}
+
+input MakeOfferInput {
+    listingId: ID!
+    madeById: ID!
+    description: String!
+    amount: Int!
+    currency: String!
+    photocardId: ID!
+}
+
+input UpdateOfferInput {
+    description: String
+    amount: Int
+    currency: String
+    photocardId: ID
+}
+
+input NegotiateOfferInput {
+    modifications: [OfferModification!]!
+    description: String!
 }
 
 """
@@ -2180,6 +2297,36 @@ func (ec *executionContext) field_Mutation_faveProfile_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_makeOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.MakeOfferInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNMakeOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐMakeOfferInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_negotiateOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.NegotiateOfferInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNNegotiateOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐNegotiateOfferInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_rejectOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2277,6 +2424,21 @@ func (ec *executionContext) field_Mutation_unfaveProfile_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateOfferInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdateOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐUpdateOfferInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2616,6 +2778,202 @@ func (ec *executionContext) fieldContext_Amount_amount(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CounterOffer_id(ctx context.Context, field graphql.CollectedField, obj *model.CounterOffer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CounterOffer_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CounterOffer_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CounterOffer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CounterOffer_original(ctx context.Context, field graphql.CollectedField, obj *model.CounterOffer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CounterOffer_original(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Original, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖpocadotᚑapiᚋgraphᚋmodelᚐOffer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CounterOffer_original(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CounterOffer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Offer_id(ctx, field)
+			case "listing":
+				return ec.fieldContext_Offer_listing(ctx, field)
+			case "madeBy":
+				return ec.fieldContext_Offer_madeBy(ctx, field)
+			case "status":
+				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
+			case "conversation":
+				return ec.fieldContext_Offer_conversation(ctx, field)
+			case "transaction":
+				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CounterOffer_description(ctx context.Context, field graphql.CollectedField, obj *model.CounterOffer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CounterOffer_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CounterOffer_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CounterOffer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CounterOffer_modifications(ctx context.Context, field graphql.CollectedField, obj *model.CounterOffer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CounterOffer_modifications(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Modifications, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.OfferModification)
+	fc.Result = res
+	return ec.marshalNOfferModification2ᚕpocadotᚑapiᚋgraphᚋmodelᚐOfferModificationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CounterOffer_modifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CounterOffer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OfferModification does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3692,10 +4050,16 @@ func (ec *executionContext) fieldContext_Listing_offers(ctx context.Context, fie
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
@@ -5683,7 +6047,7 @@ func (ec *executionContext) _Mutation_makeOffer(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MakeOffer(rctx)
+		return ec.resolvers.Mutation().MakeOffer(rctx, fc.Args["input"].(model.MakeOfferInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5716,13 +6080,30 @@ func (ec *executionContext) fieldContext_Mutation_makeOffer(ctx context.Context,
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_makeOffer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -5741,7 +6122,7 @@ func (ec *executionContext) _Mutation_updateOffer(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateOffer(rctx)
+		return ec.resolvers.Mutation().UpdateOffer(rctx, fc.Args["input"].(model.UpdateOfferInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5774,13 +6155,30 @@ func (ec *executionContext) fieldContext_Mutation_updateOffer(ctx context.Contex
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateOffer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -5832,10 +6230,16 @@ func (ec *executionContext) fieldContext_Mutation_rescindOffer(ctx context.Conte
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
@@ -5901,10 +6305,16 @@ func (ec *executionContext) fieldContext_Mutation_acceptOffer(ctx context.Contex
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
@@ -5937,7 +6347,7 @@ func (ec *executionContext) _Mutation_negotiateOffer(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().NegotiateOffer(rctx)
+		return ec.resolvers.Mutation().NegotiateOffer(rctx, fc.Args["input"].(model.NegotiateOfferInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5949,9 +6359,9 @@ func (ec *executionContext) _Mutation_negotiateOffer(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Offer)
+	res := resTmp.(*model.CounterOffer)
 	fc.Result = res
-	return ec.marshalNOffer2ᚖpocadotᚑapiᚋgraphᚋmodelᚐOffer(ctx, field.Selections, res)
+	return ec.marshalNCounterOffer2ᚖpocadotᚑapiᚋgraphᚋmodelᚐCounterOffer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_negotiateOffer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5963,20 +6373,27 @@ func (ec *executionContext) fieldContext_Mutation_negotiateOffer(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Offer_id(ctx, field)
-			case "listing":
-				return ec.fieldContext_Offer_listing(ctx, field)
-			case "madeBy":
-				return ec.fieldContext_Offer_madeBy(ctx, field)
-			case "status":
-				return ec.fieldContext_Offer_status(ctx, field)
-			case "conversation":
-				return ec.fieldContext_Offer_conversation(ctx, field)
-			case "transaction":
-				return ec.fieldContext_Offer_transaction(ctx, field)
+				return ec.fieldContext_CounterOffer_id(ctx, field)
+			case "original":
+				return ec.fieldContext_CounterOffer_original(ctx, field)
+			case "description":
+				return ec.fieldContext_CounterOffer_description(ctx, field)
+			case "modifications":
+				return ec.fieldContext_CounterOffer_modifications(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CounterOffer", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_negotiateOffer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -6028,10 +6445,16 @@ func (ec *executionContext) fieldContext_Mutation_rejectOffer(ctx context.Contex
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
@@ -6471,6 +6894,50 @@ func (ec *executionContext) fieldContext_Offer_status(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Offer_description(ctx context.Context, field graphql.CollectedField, obj *model.Offer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offer_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Offer_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Offer_conversation(ctx context.Context, field graphql.CollectedField, obj *model.Offer) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Offer_conversation(ctx, field)
 	if err != nil {
@@ -6569,6 +7036,109 @@ func (ec *executionContext) fieldContext_Offer_transaction(ctx context.Context, 
 				return ec.fieldContext_Transaction_amountEarned(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Offer_price(ctx context.Context, field graphql.CollectedField, obj *model.Offer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offer_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Amount)
+	fc.Result = res
+	return ec.marshalNAmount2ᚖpocadotᚑapiᚋgraphᚋmodelᚐAmount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Offer_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_Amount_currency(ctx, field)
+			case "amount":
+				return ec.fieldContext_Amount_amount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Amount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Offer_photocard(ctx context.Context, field graphql.CollectedField, obj *model.Offer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Offer_photocard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photocard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Photocard)
+	fc.Result = res
+	return ec.marshalOPhotocard2ᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocard(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Offer_photocard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Photocard_id(ctx, field)
+			case "hostedImageUrl":
+				return ec.fieldContext_Photocard_hostedImageUrl(ctx, field)
+			case "description":
+				return ec.fieldContext_Photocard_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Photocard_tags(ctx, field)
+			case "release":
+				return ec.fieldContext_Photocard_release(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Photocard", field.Name)
 		},
 	}
 	return fc, nil
@@ -10195,10 +10765,16 @@ func (ec *executionContext) fieldContext_UserAccount_sentOffers(ctx context.Cont
 				return ec.fieldContext_Offer_madeBy(ctx, field)
 			case "status":
 				return ec.fieldContext_Offer_status(ctx, field)
+			case "description":
+				return ec.fieldContext_Offer_description(ctx, field)
 			case "conversation":
 				return ec.fieldContext_Offer_conversation(ctx, field)
 			case "transaction":
 				return ec.fieldContext_Offer_transaction(ctx, field)
+			case "price":
+				return ec.fieldContext_Offer_price(ctx, field)
+			case "photocard":
+				return ec.fieldContext_Offer_photocard(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Offer", field.Name)
 		},
@@ -12914,6 +13490,110 @@ func (ec *executionContext) unmarshalInputListingFilters(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMakeOfferInput(ctx context.Context, obj interface{}) (model.MakeOfferInput, error) {
+	var it model.MakeOfferInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"listingId", "madeById", "description", "amount", "currency", "photocardId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "listingId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listingId"))
+			it.ListingID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "madeById":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("madeById"))
+			it.MadeByID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			it.Amount, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "currency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			it.Currency, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "photocardId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("photocardId"))
+			it.PhotocardID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNegotiateOfferInput(ctx context.Context, obj interface{}) (model.NegotiateOfferInput, error) {
+	var it model.NegotiateOfferInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"modifications", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "modifications":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modifications"))
+			it.Modifications, err = ec.unmarshalNOfferModification2ᚕpocadotᚑapiᚋgraphᚋmodelᚐOfferModificationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPhotocardFilters(ctx context.Context, obj interface{}) (model.PhotocardFilters, error) {
 	var it model.PhotocardFilters
 	asMap := map[string]interface{}{}
@@ -13302,6 +13982,58 @@ func (ec *executionContext) unmarshalInputUpdateListingInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateOfferInput(ctx context.Context, obj interface{}) (model.UpdateOfferInput, error) {
+	var it model.UpdateOfferInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"description", "amount", "currency", "photocardId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			it.Amount, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "currency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			it.Currency, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "photocardId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("photocardId"))
+			it.PhotocardID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj interface{}) (model.UpdateUserInput, error) {
 	var it model.UpdateUserInput
 	asMap := map[string]interface{}{}
@@ -13663,6 +14395,55 @@ func (ec *executionContext) _Amount(ctx context.Context, sel ast.SelectionSet, o
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var counterOfferImplementors = []string{"CounterOffer"}
+
+func (ec *executionContext) _CounterOffer(ctx context.Context, sel ast.SelectionSet, obj *model.CounterOffer) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, counterOfferImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CounterOffer")
+		case "id":
+
+			out.Values[i] = ec._CounterOffer_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "original":
+
+			out.Values[i] = ec._CounterOffer_original(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+
+			out.Values[i] = ec._CounterOffer_description(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "modifications":
+
+			out.Values[i] = ec._CounterOffer_modifications(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14432,6 +15213,13 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "description":
+
+			out.Values[i] = ec._Offer_description(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "conversation":
 
 			out.Values[i] = ec._Offer_conversation(ctx, field, obj)
@@ -14456,6 +15244,17 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 				return innerFunc(ctx)
 
 			})
+		case "price":
+
+			out.Values[i] = ec._Offer_price(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "photocard":
+
+			out.Values[i] = ec._Offer_photocard(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15976,6 +16775,20 @@ func (ec *executionContext) marshalNCardCondition2pocadotᚑapiᚋgraphᚋmodel�
 	return v
 }
 
+func (ec *executionContext) marshalNCounterOffer2pocadotᚑapiᚋgraphᚋmodelᚐCounterOffer(ctx context.Context, sel ast.SelectionSet, v model.CounterOffer) graphql.Marshaler {
+	return ec._CounterOffer(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCounterOffer2ᚖpocadotᚑapiᚋgraphᚋmodelᚐCounterOffer(ctx context.Context, sel ast.SelectionSet, v *model.CounterOffer) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CounterOffer(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNGroup2ᚕᚖpocadotᚑapiᚋgraphᚋmodelᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -16382,6 +17195,11 @@ func (ec *executionContext) marshalNListingType2ᚕpocadotᚑapiᚋgraphᚋmodel
 	return ret
 }
 
+func (ec *executionContext) unmarshalNMakeOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐMakeOfferInput(ctx context.Context, v interface{}) (model.MakeOfferInput, error) {
+	res, err := ec.unmarshalInputMakeOfferInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNMessage2pocadotᚑapiᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v model.Message) graphql.Marshaler {
 	return ec._Message(ctx, sel, &v)
 }
@@ -16440,6 +17258,11 @@ func (ec *executionContext) marshalNMessage2ᚖpocadotᚑapiᚋgraphᚋmodelᚐM
 	return ec._Message(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNNegotiateOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐNegotiateOfferInput(ctx context.Context, v interface{}) (model.NegotiateOfferInput, error) {
+	res, err := ec.unmarshalInputNegotiateOfferInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNOffer2pocadotᚑapiᚋgraphᚋmodelᚐOffer(ctx context.Context, sel ast.SelectionSet, v model.Offer) graphql.Marshaler {
 	return ec._Offer(ctx, sel, &v)
 }
@@ -16496,6 +17319,77 @@ func (ec *executionContext) marshalNOffer2ᚖpocadotᚑapiᚋgraphᚋmodelᚐOff
 		return graphql.Null
 	}
 	return ec._Offer(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOfferModification2pocadotᚑapiᚋgraphᚋmodelᚐOfferModification(ctx context.Context, v interface{}) (model.OfferModification, error) {
+	var res model.OfferModification
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOfferModification2pocadotᚑapiᚋgraphᚋmodelᚐOfferModification(ctx context.Context, sel ast.SelectionSet, v model.OfferModification) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNOfferModification2ᚕpocadotᚑapiᚋgraphᚋmodelᚐOfferModificationᚄ(ctx context.Context, v interface{}) ([]model.OfferModification, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]model.OfferModification, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNOfferModification2pocadotᚑapiᚋgraphᚋmodelᚐOfferModification(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNOfferModification2ᚕpocadotᚑapiᚋgraphᚋmodelᚐOfferModificationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.OfferModification) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOfferModification2pocadotᚑapiᚋgraphᚋmodelᚐOfferModification(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNOfferStatus2pocadotᚑapiᚋgraphᚋmodelᚐOfferStatus(ctx context.Context, v interface{}) (model.OfferStatus, error) {
@@ -16891,6 +17785,11 @@ func (ec *executionContext) marshalNTransaction2ᚖpocadotᚑapiᚋgraphᚋmodel
 		return graphql.Null
 	}
 	return ec._Transaction(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateOfferInput2pocadotᚑapiᚋgraphᚋmodelᚐUpdateOfferInput(ctx context.Context, v interface{}) (model.UpdateOfferInput, error) {
+	res, err := ec.unmarshalInputUpdateOfferInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUserAccount2pocadotᚑapiᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {
@@ -17395,6 +18294,22 @@ func (ec *executionContext) unmarshalOIdolFilterFields2ᚖpocadotᚑapiᚋgraph�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOListingFieldFilters2ᚖpocadotᚑapiᚋgraphᚋmodelᚐListingFieldFilters(ctx context.Context, v interface{}) (*model.ListingFieldFilters, error) {
 	if v == nil {
 		return nil, nil
@@ -17484,6 +18399,13 @@ func (ec *executionContext) marshalOListingType2ᚖpocadotᚑapiᚋgraphᚋmodel
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOPhotocard2ᚖpocadotᚑapiᚋgraphᚋmodelᚐPhotocard(ctx context.Context, sel ast.SelectionSet, v *model.Photocard) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Photocard(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

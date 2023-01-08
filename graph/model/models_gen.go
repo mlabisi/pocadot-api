@@ -52,6 +52,13 @@ type Amount struct {
 	Amount   int    `json:"amount"`
 }
 
+type CounterOffer struct {
+	ID            string              `json:"id"`
+	Original      *Offer              `json:"original"`
+	Description   string              `json:"description"`
+	Modifications []OfferModification `json:"modifications"`
+}
+
 // A group in the database
 type Group struct {
 	ID    string  `json:"id"`
@@ -163,6 +170,15 @@ type ListingFilters struct {
 	Fields *ListingFieldFilters `json:"fields"`
 }
 
+type MakeOfferInput struct {
+	ListingID   string `json:"listingId"`
+	MadeByID    string `json:"madeById"`
+	Description string `json:"description"`
+	Amount      int    `json:"amount"`
+	Currency    string `json:"currency"`
+	PhotocardID string `json:"photocardId"`
+}
+
 // A message sent from one user to another
 type Message struct {
 	Timestamp int          `json:"timestamp"`
@@ -171,14 +187,22 @@ type Message struct {
 	Body      string       `json:"body"`
 }
 
+type NegotiateOfferInput struct {
+	Modifications []OfferModification `json:"modifications"`
+	Description   string              `json:"description"`
+}
+
 // Represents an offer made on a listing in the system
 type Offer struct {
 	ID           string       `json:"id"`
 	Listing      *Listing     `json:"listing"`
 	MadeBy       *UserAccount `json:"madeBy"`
 	Status       OfferStatus  `json:"status"`
+	Description  string       `json:"description"`
 	Conversation []*Message   `json:"conversation"`
 	Transaction  *Transaction `json:"transaction"`
+	Price        *Amount      `json:"price"`
+	Photocard    *Photocard   `json:"photocard"`
 }
 
 type Photocard struct {
@@ -292,6 +316,13 @@ type UpdateListingInput struct {
 	TargetGroups          []string       `json:"targetGroups"`
 	Type                  []ListingType  `json:"type"`
 	TargetMinStaringPrice *float64       `json:"targetMinStaringPrice"`
+}
+
+type UpdateOfferInput struct {
+	Description *string `json:"description"`
+	Amount      *int    `json:"amount"`
+	Currency    *string `json:"currency"`
+	PhotocardID *string `json:"photocardId"`
 }
 
 // When updating a user, other existing fields can be added
@@ -509,6 +540,50 @@ func (e *ListingType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ListingType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The modifications that can be requested for an offer
+type OfferModification string
+
+const (
+	OfferModificationIncreasePrice   OfferModification = "INCREASE_PRICE"
+	OfferModificationDecreasePrice   OfferModification = "DECREASE_PRICE"
+	OfferModificationChangePhotocard OfferModification = "CHANGE_PHOTOCARD"
+)
+
+var AllOfferModification = []OfferModification{
+	OfferModificationIncreasePrice,
+	OfferModificationDecreasePrice,
+	OfferModificationChangePhotocard,
+}
+
+func (e OfferModification) IsValid() bool {
+	switch e {
+	case OfferModificationIncreasePrice, OfferModificationDecreasePrice, OfferModificationChangePhotocard:
+		return true
+	}
+	return false
+}
+
+func (e OfferModification) String() string {
+	return string(e)
+}
+
+func (e *OfferModification) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OfferModification(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OfferModification", str)
+	}
+	return nil
+}
+
+func (e OfferModification) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
